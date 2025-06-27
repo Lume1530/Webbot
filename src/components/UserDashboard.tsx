@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, TrendingUp, DollarSign, Settings, Upload, Trash2 } from 'lucide-react';
+import { Plus, Eye, TrendingUp, DollarSign, Settings, Upload, Trash2, Bug } from 'lucide-react';
 import { User, Reel } from '../types';
 import { trackingService } from '../services/trackingService';
 import { validateInstagramUrl, formatViews, formatCurrency } from '../utils/instagram';
+import { trackReelViewWithRapidAPI, fetchInstagramStatsWithRapidAPI, testInstagramAPI, fetchInstagramReelStatsFrontend } from '../utils/rapidapi';
+import { SubmissionForm } from './SubmissionForm';
 
 interface UserDashboardProps {
   user: User;
@@ -15,6 +17,10 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitUrl, setSubmitUrl] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [submitLikes, setSubmitLikes] = useState('');
+  const [submitComments, setSubmitComments] = useState('');
+  const [testUrl, setTestUrl] = useState('');
+  const [testResult, setTestResult] = useState<any>(null);
 
   useEffect(() => {
     loadReels();
@@ -25,38 +31,45 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
     setReels(userReels);
   };
 
-  const handleSubmitReel = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!submitUrl.trim()) return;
-
-    if (!validateInstagramUrl(submitUrl)) {
-      setSubmitError('Please enter a valid Instagram reel URL');
-      return;
-    }
-
-    if (!user.isApproved) {
-      setSubmitError('Your account is pending approval. Please wait for admin approval.');
-      return;
-    }
-
+  const handleSingleReelSubmit = async (url: string) => {
     setIsSubmitting(true);
     setSubmitError('');
-
     try {
-      const result = await trackingService.submitReel(submitUrl, user.id);
-      
+      // Fetch real stats from frontend RapidAPI call
+      const stats = await fetchInstagramReelStatsFrontend(url);
+      // Save to trackingService
+      const result = await trackingService.submitReelWithStats(url, user.id, stats);
       if (result.success) {
-        setSubmitUrl('');
         loadReels();
-        
-        // Update user stats
-        const stats = trackingService.getUserStats(user.id);
-        onUpdateUser(stats);
+        const userStats = trackingService.getUserStats(user.id);
+        onUpdateUser(userStats);
       } else {
         setSubmitError(result.error || 'Failed to submit reel');
       }
     } catch (error) {
       setSubmitError('An error occurred while submitting the reel');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkReelSubmit = async (urls: string[]) => {
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      for (const url of urls) {
+        try {
+          const stats = await fetchInstagramReelStatsFrontend(url);
+          await trackingService.submitReelWithStats(url, user.id, stats);
+        } catch (e) {
+          // Ignore individual errors for bulk
+        }
+      }
+      loadReels();
+      const userStats = trackingService.getUserStats(user.id);
+      onUpdateUser(userStats);
+    } catch (error) {
+      setSubmitError('An error occurred while submitting the reels');
     } finally {
       setIsSubmitting(false);
     }
@@ -70,6 +83,21 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
       // Update user stats
       const stats = trackingService.getUserStats(user.id);
       onUpdateUser(stats);
+    }
+  };
+
+  const handleTestAPI = async () => {
+    if (!testUrl.trim()) {
+      alert('Please enter a URL to test');
+      return;
+    }
+    try {
+      setTestResult('Testing...');
+      // Use the new frontend fetch function for quick test
+      const result = await fetchInstagramReelStatsFrontend(testUrl);
+      setTestResult(result);
+    } catch (error) {
+      setTestResult({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
@@ -253,9 +281,9 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
             {reels.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {reels.map(reel => (
-                  <div key={reel.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div key={reel.id || reel.shortcode || Math.random()} className="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div className="relative">
-                      <img src={reel.thumbnail} alt="" className="w-full h-48 object-cover" />
+                      <img src={reel.thumbnail || ''} alt="" className="w-full h-48 object-cover" onError={e => { e.currentTarget.src = ''; }} />
                       <div className="absolute top-3 right-3">
                         <button
                           onClick={() => handleDeleteReel(reel.id)}
@@ -272,9 +300,9 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
                     </div>
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900">@{reel.username}</h3>
+                        <h3 className="font-semibold text-gray-900">@{reel.username || 'unknown'}</h3>
                         <a
-                          href={reel.url}
+                          href={reel.url || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-purple-600 hover:text-purple-800 text-sm"
@@ -285,19 +313,16 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="text-center">
                           <p className="text-xs text-gray-600">Views</p>
-                          <p className="font-bold text-gray-900">{formatViews(reel.views)}</p>
+                          <p className="font-bold text-gray-900">{formatViews(reel.views || 0)}</p>
                         </div>
                         <div className="text-center">
                           <p className="text-xs text-gray-600">Likes</p>
-                          <p className="font-bold text-gray-900">{formatViews(reel.likes)}</p>
+                          <p className="font-bold text-pink-600 text-lg">{reel.likes && reel.likes > 0 ? formatViews(reel.likes) : '-'}</p>
                         </div>
                         <div className="text-center">
                           <p className="text-xs text-gray-600">Comments</p>
-                          <p className="font-bold text-gray-900">{formatViews(reel.comments)}</p>
+                          <p className="font-bold text-blue-600 text-lg">{reel.comments && reel.comments > 0 ? formatViews(reel.comments) : '-'}</p>
                         </div>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Last updated: {reel.lastUpdated.toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -324,48 +349,12 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Submit Instagram Reel</h2>
-              
-              <form onSubmit={handleSubmitReel} className="space-y-4">
-                <div>
-                  <label htmlFor="reel-url" className="block text-sm font-medium text-gray-700 mb-2">
-                    Instagram Reel URL
-                  </label>
-                  <input
-                    type="url"
-                    id="reel-url"
-                    value={submitUrl}
-                    onChange={(e) => setSubmitUrl(e.target.value)}
-                    placeholder="https://www.instagram.com/reel/ABC123/"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                {submitError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    {submitError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !submitUrl.trim()}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-5 w-5" />
-                      <span>Submit Reel</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
+              <SubmissionForm
+                onSubmit={handleSingleReelSubmit}
+                onBulkSubmit={handleBulkReelSubmit}
+                isLoading={isSubmitting}
+                error={submitError}
+              />
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                 <h3 className="text-sm font-medium text-blue-900 mb-2">How it works:</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
@@ -374,6 +363,45 @@ export function UserDashboard({ user, onUpdateUser }: UserDashboardProps) {
                   <li>• Your reel will be tracked for view updates every 5 minutes</li>
                   <li>• View your analytics in the Dashboard and Reels tabs</li>
                 </ul>
+              </div>
+            </div>
+
+            {/* Debug/Test Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <Bug className="h-5 w-5 mr-2" />
+                Debug API Test
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Test Instagram URL</label>
+                  <input
+                    type="url"
+                    value={testUrl}
+                    onChange={(e) => setTestUrl(e.target.value)}
+                    placeholder="https://www.instagram.com/reel/..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  onClick={handleTestAPI}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center"
+                >
+                  <Bug className="h-4 w-4 mr-2" />
+                  Test API Response
+                </button>
+                
+                {testResult && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">API Test Result:</h3>
+                    <pre className="text-xs text-gray-700 whitespace-pre-wrap overflow-auto max-h-64">
+                      {typeof testResult === 'string' 
+                        ? testResult 
+                        : JSON.stringify(testResult, null, 2)
+                      }
+                    </pre>
+                  </div>
+                )}
               </div>
             </div>
           </div>

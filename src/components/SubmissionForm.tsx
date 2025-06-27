@@ -12,36 +12,33 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error }: Sub
   const [url, setUrl] = useState('');
   const [bulkUrls, setBulkUrls] = useState('');
   const [mode, setMode] = useState<'single' | 'bulk'>('single');
+  const [limitError, setLimitError] = useState('');
+
+  const MAX_REELS = 5;
 
   const handleSingleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLimitError('');
     if (!url.trim()) return;
-    
-    try {
-      await onSubmit(url.trim());
-      setUrl('');
-    } catch (err) {
-      // Error is handled by parent component
-    }
+    await onSubmit(url.trim());
+    setUrl('');
   };
 
   const handleBulkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLimitError('');
     if (!bulkUrls.trim()) return;
-
     const urls = bulkUrls
       .split('\n')
       .map(url => url.trim())
       .filter(url => url.length > 0);
-
     if (urls.length === 0) return;
-
-    try {
-      await onBulkSubmit(urls);
-      setBulkUrls('');
-    } catch (err) {
-      // Error is handled by parent component
+    if (urls.length > MAX_REELS) {
+      setLimitError(`You can submit up to ${MAX_REELS} reels at a time.`);
+      return;
     }
+    await onBulkSubmit(urls);
+    setBulkUrls('');
   };
 
   return (
@@ -82,6 +79,12 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error }: Sub
         </div>
       )}
 
+      {limitError && (
+        <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
+          {limitError}
+        </div>
+      )}
+
       {mode === 'single' ? (
         <form onSubmit={handleSingleSubmit} className="space-y-4">
           <div>
@@ -117,7 +120,7 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error }: Sub
               id="bulk-urls"
               value={bulkUrls}
               onChange={(e) => setBulkUrls(e.target.value)}
-              placeholder="https://www.instagram.com/reel/ABC123/&#10;https://www.instagram.com/reel/DEF456/&#10;https://www.instagram.com/reel/GHI789/"
+              placeholder="https://www.instagram.com/reel/ABC123/\nhttps://www.instagram.com/reel/DEF456/"
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-none"
               disabled={isLoading}
