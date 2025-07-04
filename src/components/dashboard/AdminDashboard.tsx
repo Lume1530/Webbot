@@ -612,23 +612,23 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending User Approvals</h3>
                 <div className="space-y-4">
                   {pendingUsers.map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                    <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-yellow-50 rounded-lg gap-3">
                       <div>
                         <p className="font-medium text-gray-900">{user.username}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                         <p className="text-xs text-gray-500">Registered: {new Date(user.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                         <button
                           onClick={() => handleApproveUser(user.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
                         >
                           <UserCheck className="h-4 w-4" />
                           <span>Approve</span>
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
                         >
                           <UserX className="h-4 w-4" />
                           <span>Reject</span>
@@ -644,23 +644,23 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Instagram Account Approvals</h3>
                 <div className="space-y-4">
                   {pendingInstagramAccounts.map(account => (
-                    <div key={account.id} className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                    <div key={account.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-purple-50 rounded-lg gap-3">
                       <div>
                         <p className="font-medium text-gray-900">@{account.username}</p>
                         <p className="text-sm text-gray-600">{account.user_email}</p>
                         <p className="text-xs text-gray-500">Submitted: {new Date(account.submitted_at).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                         <button
                           onClick={() => handleApproveInstagramAccount(account.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
                         >
                           <UserCheck className="h-4 w-4" />
                           <span>Approve</span>
                         </button>
                         <button
                           onClick={() => handleRejectInstagramAccount(account.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
                         >
                           <UserX className="h-4 w-4" />
                           <span>Reject</span>
@@ -721,7 +721,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 </div>
                 <div className="divide-y divide-gray-200">
                   {pendingInstagramAccounts.map(account => (
-                    <div key={account.id} className="p-6 hover:bg-yellow-50 transition-colors flex items-center justify-between">
+                    <div key={account.id} className="p-6 hover:bg-yellow-50 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold">
                           {account.username?.charAt(0)?.toUpperCase() || 'I'}
@@ -732,7 +732,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           <span className="text-xs text-gray-500">Submitted: {new Date(account.submitted_at).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                         <button
                           onClick={async () => {
                             if (window.confirm('Are you sure you want to remove this Instagram account?')) {
@@ -740,7 +740,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                               loadInstagramAccounts();
                             }
                           }}
-                          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                           <UserX className="h-4 w-4" />
                           Remove Account
@@ -1437,9 +1437,9 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </div>
                         </div>
                         
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex flex-col sm:flex-row gap-2 ml-0 sm:ml-4 w-full sm:w-auto">
                           <button 
-                            className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-full sm:w-auto" 
                             title="Edit" 
                             onClick={() => handleEditCampaign(c)}
                           >
@@ -1447,7 +1447,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </button>
                           <button
                             onClick={() => handleExportCampaignSummary(c.id, c.name)}
-                            className="text-gray-400 hover:text-emerald-600 transition-colors"
+                            className="text-gray-400 hover:text-emerald-600 transition-colors flex items-center justify-center w-full sm:w-auto"
                             title="Export User Summary"
                           >
                             <FileSpreadsheet className="h-5 w-5" />
@@ -1455,14 +1455,14 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </button>
                           <button
                             onClick={() => handleDownloadLeaderboardImage(c.id, c.name)}
-                            className="text-gray-400 hover:text-indigo-600 transition-colors"
+                            className="text-gray-400 hover:text-indigo-600 transition-colors flex items-center justify-center w-full sm:w-auto"
                             title="Download Leaderboard Image"
                           >
                             <Trophy className="h-5 w-5" />
                             <span className="sr-only">Download Leaderboard Image</span>
                           </button>
                           <button 
-                            className="text-gray-400 hover:text-red-600 transition-colors" 
+                            className="text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center w-full sm:w-auto" 
                             title="Delete" 
                             onClick={() => handleDeleteCampaign(c.id)}
                           >
