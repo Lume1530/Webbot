@@ -58,7 +58,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       setUsers(usersData);
       // Fetch all reels for admin
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/admin/reels', {
+      const res = await fetch('/api/admin/reels', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allReels = await res.json();
@@ -69,14 +69,14 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   };
 
   const loadCampaigns = async () => {
-    const res = await fetch('http://localhost:4000/api/campaigns');
+    const res = await fetch('/api/campaigns');
     setCampaigns(await res.json());
   };
 
   const loadStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/admin/stats', {
+      const res = await fetch('/api/admin/stats', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -89,7 +89,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const loadInstagramAccounts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/admin/instagram-accounts', {
+      const res = await fetch('/api/admin/instagram-accounts', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const accounts = await res.json();
@@ -104,7 +104,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     // TODO: Implement this endpoint in backend
     // try {
     //   const token = localStorage.getItem('token');
-    //   const res = await fetch('http://localhost:4000/api/admin/instagram-stats', {
+    //   const res = await fetch('/api/admin/instagram-stats', {
     //     headers: { 'Authorization': `Bearer ${token}` }
     //   });
     //   const stats = await res.json();
@@ -155,7 +155,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const handleDeleteReel = async (reelId: string) => {
     if (confirm('Are you sure you want to delete this reel?')) {
       try {
-        const response = await fetch(`http://localhost:4000/api/admin/reels/${reelId}`, {
+        const response = await fetch(`/api/admin/reels/${reelId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -180,7 +180,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     
     if (confirm(`Are you sure you want to delete ${selectedReels.length} selected reels?`)) {
       try {
-        const response = await fetch('http://localhost:4000/api/admin/reels/bulk-delete', {
+        const response = await fetch('/api/admin/reels/bulk-delete', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch('http://localhost:4000/api/campaigns', {
+    await fetch('/api/campaigns', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify({ ...campaignForm, platform: campaignForm.platform.join(','), status: campaignForm.status })
@@ -258,7 +258,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     if (!editingCampaign) return;
     
     try {
-      const response = await fetch(`http://localhost:4000/api/campaigns/${editingCampaign.id}`, {
+      const response = await fetch(`/api/campaigns/${editingCampaign.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...campaignForm, platform: campaignForm.platform.join(','), status: campaignForm.status })
@@ -281,7 +281,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     if (!confirm('Are you sure you want to delete this campaign?')) return;
     
     try {
-      const response = await fetch(`http://localhost:4000/api/campaigns/${campaignId}`, {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -300,7 +300,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const handleExportCampaignReels = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/api/admin/campaigns/${campaignId}/export`, {
+      const response = await fetch(`/api/admin/campaigns/${campaignId}/export`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -326,7 +326,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const handleExportAllReels = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/api/admin/reels/export', {
+      const response = await fetch('/api/admin/reels/export', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -382,7 +382,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
     try {
       const token = authService.getToken();
-      const response = await fetch(`http://localhost:4000/api/admin/users/${selectedUserForEdit.id}/views`, {
+      const response = await fetch(`/api/admin/users/${selectedUserForEdit.id}/views`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -419,7 +419,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const handleExportCampaignSummary = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/api/admin/campaigns/${campaignId}/export-summary`, {
+      const response = await fetch(`/api/admin/campaigns/${campaignId}/export-summary`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -444,7 +444,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const handleDownloadLeaderboardImage = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/api/admin/campaigns/${campaignId}/leaderboard-image`, {
+      const response = await fetch(`/api/admin/campaigns/${campaignId}/leaderboard-image`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {

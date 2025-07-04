@@ -1,6 +1,6 @@
 import { User } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = '/api';
 
 class AuthService {
   private currentUser: User | null = null;
@@ -346,7 +346,7 @@ class AuthService {
 
   async getPaymentMethods(): Promise<{ usdt?: string; upi?: string; paypal?: string; telegram?: string }> {
     try {
-      const response = await fetch('http://localhost:4000/api/user/payment', {
+      const response = await fetch('/api/user/payment', {
         headers: this.getAuthHeaders(),
       });
       return await response.json();
@@ -358,7 +358,7 @@ class AuthService {
 
   async updatePaymentMethods(data: { usdt?: string; upi?: string; paypal?: string; telegram?: string }): Promise<boolean> {
     try {
-      const response = await fetch('http://localhost:4000/api/user/payment', {
+      const response = await fetch('/api/user/payment', {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),

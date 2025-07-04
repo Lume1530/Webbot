@@ -31,7 +31,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
       
       // Fetch all reels for staff (without view data)
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/admin/reels', {
+      const res = await fetch('/api/admin/reels', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allReels = await res.json();
@@ -64,7 +64,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
   const handleDeleteReel = async (reelId: string) => {
     if (confirm('Are you sure you want to delete this reel?')) {
       try {
-        const response = await fetch(`http://localhost:4000/api/admin/reels/${reelId}`, {
+        const response = await fetch(`/api/admin/reels/${reelId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -89,7 +89,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
 
     if (confirm(`Are you sure you want to delete ${selectedReels.length} reels?`)) {
       try {
-        const response = await fetch('http://localhost:4000/api/admin/reels/bulk-delete', {
+        const response = await fetch('/api/admin/reels/bulk-delete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { Reel } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = '/api';
 
 class ReelApiService {
   private getAuthHeaders(): HeadersInit {

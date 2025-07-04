@@ -1,6 +1,6 @@
 import { Campaign, CampaignAssignment } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = '/api';
 
 export const campaignService = {
   // Get all available campaigns (not yet joined by user)
