@@ -38,7 +38,7 @@ app.get('/api/reels/:userId', async (req, res) => {
 
 // Get all users
 app.get('/api/admin/users', async (req, res) => {
-  const result = await pool.query('SELECT * FROM users');
+  const result = await pool.query('SELECT * FROM public.users');
   console.log('All users from DB:', result.rows);
   const users = result.rows.map(u => ({
     ...u,
@@ -51,7 +51,7 @@ app.get('/api/admin/users', async (req, res) => {
 // Approve a user
 app.post('/api/admin/users/:id/approve', async (req, res) => {
   const userId = req.params.id;
-  await pool.query('UPDATE users SET is_approved = true WHERE id = $1', [userId]);
+  await pool.query('UPDATE public.users SET is_approved = true WHERE id = $1', [userId]);
   res.json({ success: true });
 });
 
@@ -59,15 +59,14 @@ app.post('/api/admin/users/:id/approve', async (req, res) => {
 app.put('/api/admin/users/:id', async (req, res) => {
   const userId = req.params.id;
   const updates = req.body;
-  // Example: update username and email
-  await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3', [updates.username, updates.email, userId]);
+  await pool.query('UPDATE public.users SET username = $1, email = $2 WHERE id = $3', [updates.username, updates.email, userId]);
   res.json({ success: true });
 });
 
 // Delete a user
 app.delete('/api/admin/users/:id', async (req, res) => {
   const userId = req.params.id;
-  await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+  await pool.query('DELETE FROM public.users WHERE id = $1', [userId]);
   res.json({ success: true });
 });
 
@@ -188,17 +187,16 @@ app.post('/api/register', async (req, res) => {
   if (!username) {
     return res.status(400).json({ error: 'Username is required' });
   }
-  // Debug log for is_approved value
   console.log('Registering user with is_approved:', null);
   const result = await pool.query(
-    'INSERT INTO users (username, email, password_hash, role, is_approved, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+    'INSERT INTO public.users (username, email, password_hash, role, is_approved, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
     [username, email, finalPasswordHash, role || 'user', null]
   );
   res.json(result.rows[0]);
 });
 
 app.get('/api/debug-users', async (req, res) => {
-  const result = await pool.query('SELECT id, username, is_approved FROM users');
+  const result = await pool.query('SELECT id, username, is_approved FROM public.users');
   console.log('DEBUG /api/debug-users:', result.rows);
   res.json(result.rows);
 });
