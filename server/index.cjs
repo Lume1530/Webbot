@@ -70,7 +70,7 @@ app.post('/api/register', async (req, res) => {
 
     // Check if username already exists
     const existingUsername = await pool.query(
-      'SELECT * FROM users WHERE username = $1',
+      'SELECT * FROM public.users WHERE username = $1',
       [username]
     );
 
@@ -80,7 +80,7 @@ app.post('/api/register', async (req, res) => {
 
     // Check if email already exists
     const existingEmail = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT * FROM public.users WHERE email = $1',
       [email]
     );
 
@@ -92,14 +92,14 @@ app.post('/api/register', async (req, res) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create user
+    // Create user with is_approved = null (pending)
     const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, is_approved, created_at',
-      [username, email, passwordHash, 'user', false]
+      'INSERT INTO public.users (username, email, password_hash, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, is_approved, created_at',
+      [username, email, passwordHash, 'user', null]
     );
 
     // Notify all admins and staff about new user registration
-    const staffAndAdmins = await pool.query('SELECT id FROM users WHERE role IN ($1, $2)', ['admin', 'staff']);
+    const staffAndAdmins = await pool.query('SELECT id FROM public.users WHERE role IN ($1, $2)', ['admin', 'staff']);
     for (const staff of staffAndAdmins.rows) {
       await pool.query(
         'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
