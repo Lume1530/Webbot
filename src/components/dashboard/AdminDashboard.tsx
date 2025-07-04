@@ -618,19 +618,19 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         <p className="text-sm text-gray-600">{user.email}</p>
                         <p className="text-xs text-gray-500">Registered: {new Date(user.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                      <div className="flex flex-row gap-2 w-full sm:w-auto">
                         <button
                           onClick={() => handleApproveUser(user.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
+                          className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs flex items-center justify-center space-x-1 w-1/2 sm:w-auto min-w-[70px]"
                         >
-                          <UserCheck className="h-4 w-4" />
+                          <UserCheck className="h-3 w-3" />
                           <span>Approve</span>
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs flex items-center justify-center space-x-1 w-1/2 sm:w-auto min-w-[70px]"
                         >
-                          <UserX className="h-4 w-4" />
+                          <UserX className="h-3 w-3" />
                           <span>Reject</span>
                         </button>
                       </div>
@@ -650,19 +650,19 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         <p className="text-sm text-gray-600">{account.user_email}</p>
                         <p className="text-xs text-gray-500">Submitted: {new Date(account.submitted_at).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                      <div className="flex flex-row gap-2 w-full sm:w-auto">
                         <button
                           onClick={() => handleApproveInstagramAccount(account.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
+                          className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs flex items-center justify-center space-x-1 w-1/2 sm:w-auto min-w-[70px]"
                         >
-                          <UserCheck className="h-4 w-4" />
+                          <UserCheck className="h-3 w-3" />
                           <span>Approve</span>
                         </button>
                         <button
                           onClick={() => handleRejectInstagramAccount(account.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center space-x-1 w-full sm:w-auto"
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs flex items-center justify-center space-x-1 w-1/2 sm:w-auto min-w-[70px]"
                         >
-                          <UserX className="h-4 w-4" />
+                          <UserX className="h-3 w-3" />
                           <span>Reject</span>
                         </button>
                       </div>
@@ -732,7 +732,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           <span className="text-xs text-gray-500">Submitted: {new Date(account.submitted_at).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                      <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto min-w-0">
                         <button
                           onClick={async () => {
                             if (window.confirm('Are you sure you want to remove this Instagram account?')) {
@@ -740,10 +740,10 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                               loadInstagramAccounts();
                             }
                           }}
-                          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+                          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1 text-xs flex-1 min-w-0"
                         >
-                          <UserX className="h-4 w-4" />
-                          Remove Account
+                          <UserX className="h-3 w-3" />
+                          Remove
                         </button>
                       </div>
                     </div>
@@ -793,7 +793,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto min-w-0">
                           <button
                             onClick={async () => {
                               if (window.confirm('Are you sure you want to remove this Instagram account?')) {
@@ -801,10 +801,10 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                                 loadInstagramAccounts();
                               }
                             }}
-                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1 text-xs flex-1 min-w-0"
                           >
-                            <UserX className="h-4 w-4" />
-                            Remove Account
+                            <UserX className="h-3 w-3" />
+                            Remove
                           </button>
                         </div>
                       </div>
@@ -943,20 +943,20 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3">
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 w-full sm:w-auto min-w-0">
                           <button
                             onClick={() => handleEditUserViews(user)}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3" />
                             Edit Views
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
                           >
-                            <Trash2 className="h-4 w-4" />
-                            Delete Account
+                            <Trash2 className="h-3 w-3" />
+                            Delete
                           </button>
                         </div>
                       </div>
@@ -1412,22 +1412,22 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div className="bg-blue-50 rounded-lg p-3">
-                              <p className="text-xs text-blue-600 font-medium">Active Users</p>
-                              <p className="text-lg font-bold text-blue-900">{c.active_users || 0}</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                            <div className="bg-blue-50 rounded-lg p-2">
+                              <p className="text-[10px] text-blue-600 font-medium">Active Users</p>
+                              <p className="text-base font-bold text-blue-900">{c.active_users || 0}</p>
                             </div>
-                            <div className="bg-green-50 rounded-lg p-3">
-                              <p className="text-xs text-green-600 font-medium">Total Views</p>
-                              <p className="text-lg font-bold text-green-900">{formatViews(c.total_views || 0)}</p>
+                            <div className="bg-green-50 rounded-lg p-2">
+                              <p className="text-[10px] text-green-600 font-medium">Total Views</p>
+                              <p className="text-base font-bold text-green-900">{formatViews(c.total_views || 0)}</p>
                             </div>
-                            <div className="bg-purple-50 rounded-lg p-3">
-                              <p className="text-xs text-purple-600 font-medium">Pay Rate</p>
-                              <p className="text-lg font-bold text-purple-900">${c.pay_rate}/1M</p>
+                            <div className="bg-purple-50 rounded-lg p-2">
+                              <p className="text-[10px] text-purple-600 font-medium">Pay Rate</p>
+                              <p className="text-base font-bold text-purple-900">${c.pay_rate}/1M</p>
                             </div>
-                            <div className="bg-yellow-50 rounded-lg p-3">
-                              <p className="text-xs text-yellow-600 font-medium">Est. Payout</p>
-                              <p className="text-lg font-bold text-yellow-900">{formatCurrency(c.estimated_payout || 0)}</p>
+                            <div className="bg-yellow-50 rounded-lg p-2">
+                              <p className="text-[10px] text-yellow-600 font-medium">Est. Payout</p>
+                              <p className="text-base font-bold text-yellow-900">{formatCurrency(c.estimated_payout || 0)}</p>
                             </div>
                           </div>
                           
@@ -1437,36 +1437,36 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col sm:flex-row gap-2 ml-0 sm:ml-4 w-full sm:w-auto">
+                        <div className="flex flex-row flex-wrap gap-1 ml-0 sm:ml-4 w-full sm:w-auto mt-2">
                           <button 
-                            className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-full sm:w-auto" 
+                            className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-8 h-8 p-0" 
                             title="Edit" 
                             onClick={() => handleEditCampaign(c)}
                           >
-                            <Edit className="h-5 w-5" />
+                            <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleExportCampaignSummary(c.id, c.name)}
-                            className="text-gray-400 hover:text-emerald-600 transition-colors flex items-center justify-center w-full sm:w-auto"
+                            className="text-gray-400 hover:text-emerald-600 transition-colors flex items-center justify-center w-8 h-8 p-0"
                             title="Export User Summary"
                           >
-                            <FileSpreadsheet className="h-5 w-5" />
+                            <FileSpreadsheet className="h-4 w-4" />
                             <span className="sr-only">Export User Summary</span>
                           </button>
                           <button
                             onClick={() => handleDownloadLeaderboardImage(c.id, c.name)}
-                            className="text-gray-400 hover:text-indigo-600 transition-colors flex items-center justify-center w-full sm:w-auto"
+                            className="text-gray-400 hover:text-indigo-600 transition-colors flex items-center justify-center w-8 h-8 p-0"
                             title="Download Leaderboard Image"
                           >
-                            <Trophy className="h-5 w-5" />
+                            <Trophy className="h-4 w-4" />
                             <span className="sr-only">Download Leaderboard Image</span>
                           </button>
                           <button 
-                            className="text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center w-full sm:w-auto" 
+                            className="text-gray-400 hover:text-red-600 transition-colors flex items-center justify-center w-8 h-8 p-0" 
                             title="Delete" 
                             onClick={() => handleDeleteCampaign(c.id)}
                           >
-                            <Trash2 className="h-5 w-5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </div>

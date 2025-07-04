@@ -68,7 +68,25 @@ export const NotificationCenter: React.FC = () => {
 
       {/* Notification Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div
+          className={
+            `z-50 rounded-lg shadow-lg border border-gray-200 bg-white ` +
+            `absolute ` +
+            `mt-2 ` +
+            `w-80 right-0 ` +
+            `sm:w-80 sm:right-0 ` +
+            `max-w-xs ` +
+            `sm:max-w-none ` +
+            `sm:left-auto ` +
+            `sm:mx-0 ` +
+            `left-0 right-0 mx-2 w-auto top-12 sm:top-auto`
+          }
+          style={{
+            // On mobile, make it full width below the bell
+            // On desktop, keep as is
+            ...(window.innerWidth < 640 ? { left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto', width: 'auto', maxWidth: '20rem', top: '3rem' } : {})
+          }}
+        >
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
