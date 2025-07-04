@@ -177,7 +177,7 @@ app.post('/api/user/payout', (req, res) => res.json({ success: true }));
 // --- USER REGISTRATION (EXAMPLE) ---
 // Register a new user (pending approval by default)
 app.post('/api/register', async (req, res) => {
-  const { email, password, password_hash, role } = req.body;
+  const { username, email, password, password_hash, role } = req.body;
   let finalPasswordHash = password_hash;
   if (!finalPasswordHash && password) {
     finalPasswordHash = await bcrypt.hash(password, saltRounds);
@@ -185,9 +185,12 @@ app.post('/api/register', async (req, res) => {
   if (!finalPasswordHash) {
     return res.status(400).json({ error: 'Password or password_hash required' });
   }
+  if (!username) {
+    return res.status(400).json({ error: 'Username is required' });
+  }
   const result = await pool.query(
-    'INSERT INTO users (email, password_hash, role, is_approved, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
-    [email, finalPasswordHash, role || 'user', null]
+    'INSERT INTO users (username, email, password_hash, role, is_approved, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+    [username, email, finalPasswordHash, role || 'user', null]
   );
   res.json(result.rows[0]);
 });
