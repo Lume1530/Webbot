@@ -32,4 +32,138 @@ app.get('/api/reels/:userId', async (req, res) => {
   res.json(result.rows);
 });
 
+// --- USER MANAGEMENT ---
+
+// Get all users
+app.get('/api/admin/users', async (req, res) => {
+  const result = await pool.query('SELECT * FROM users');
+  res.json(result.rows);
+});
+
+// Approve a user
+app.post('/api/admin/users/:id/approve', async (req, res) => {
+  const userId = req.params.id;
+  await pool.query('UPDATE users SET is_approved = true WHERE id = $1', [userId]);
+  res.json({ success: true });
+});
+
+// Update a user
+app.put('/api/admin/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  const updates = req.body;
+  // Example: update username and email
+  await pool.query('UPDATE users SET username = $1, email = $2 WHERE id = $3', [updates.username, updates.email, userId]);
+  res.json({ success: true });
+});
+
+// Delete a user
+app.delete('/api/admin/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+  res.json({ success: true });
+});
+
+// --- REELS MANAGEMENT ---
+
+// Get all reels (admin)
+app.get('/api/admin/reels', async (req, res) => {
+  const result = await pool.query('SELECT * FROM reels');
+  res.json(result.rows);
+});
+
+// Delete a reel
+app.delete('/api/admin/reels/:reelId', async (req, res) => {
+  const reelId = req.params.reelId;
+  await pool.query('DELETE FROM reels WHERE id = $1', [reelId]);
+  res.json({ success: true });
+});
+
+// Bulk delete reels
+app.post('/api/admin/reels/bulk-delete', async (req, res) => {
+  const { reelIds } = req.body;
+  await pool.query('DELETE FROM reels WHERE id = ANY($1)', [reelIds]);
+  res.json({ success: true });
+});
+
+// --- CAMPAIGNS ---
+
+// Get all campaigns
+app.get('/api/campaigns', async (req, res) => {
+  const result = await pool.query('SELECT * FROM campaigns');
+  res.json(result.rows);
+});
+
+// Create a campaign
+app.post('/api/campaigns', async (req, res) => {
+  const { name, pay_rate, total_budget, description, requirements, platform, status } = req.body;
+  await pool.query(
+    'INSERT INTO campaigns (name, pay_rate, total_budget, description, requirements, platform, status) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+    [name, pay_rate, total_budget, description, requirements, platform, status]
+  );
+  res.json({ success: true });
+});
+
+// Update a campaign
+app.put('/api/campaigns/:id', async (req, res) => {
+  const id = req.params.id;
+  const { name, pay_rate, total_budget, description, requirements, platform, status } = req.body;
+  await pool.query(
+    'UPDATE campaigns SET name=$1, pay_rate=$2, total_budget=$3, description=$4, requirements=$5, platform=$6, status=$7 WHERE id=$8',
+    [name, pay_rate, total_budget, description, requirements, platform, status, id]
+  );
+  res.json({ success: true });
+});
+
+// Delete a campaign
+app.delete('/api/campaigns/:id', async (req, res) => {
+  const id = req.params.id;
+  await pool.query('DELETE FROM campaigns WHERE id = $1', [id]);
+  res.json({ success: true });
+});
+
+// --- STATS (Dummy Example) ---
+
+app.get('/api/admin/stats', async (req, res) => {
+  // Replace with real stats logic
+  res.json({ totalReels: 0, totalViews: 0, totalPayout: '0.00', activeReels: 0 });
+});
+
+// --- INSTAGRAM ACCOUNTS (Dummy Example) ---
+
+app.get('/api/admin/instagram-accounts', async (req, res) => {
+  // Replace with real logic
+  res.json([]);
+});
+
+// --- USER PAYMENT (Dummy Example) ---
+
+app.get('/api/user/payment', async (req, res) => {
+  // Replace with real logic
+  res.json({ usdt: '', upi: '', paypal: '', telegram: '' });
+});
+
+app.put('/api/user/payment', async (req, res) => {
+  // Replace with real logic
+  res.json({ success: true });
+});
+
+// --- SUPPORT MAIL (Dummy Example) ---
+
+app.post('/api/send-support-mail', async (req, res) => {
+  // Replace with real logic to send mail
+  res.json({ success: true });
+});
+
+// --- EXPORT/LEADERBOARD/ETC (Dummy Endpoints) ---
+
+app.get('/api/admin/campaigns/:campaignId/export', (req, res) => res.json({ success: true }));
+app.get('/api/admin/reels/export', (req, res) => res.json({ success: true }));
+app.post('/api/admin/users/:id/views', (req, res) => res.json({ success: true }));
+app.get('/api/admin/campaigns/:campaignId/export-summary', (req, res) => res.json({ success: true }));
+app.get('/api/admin/campaigns/:campaignId/leaderboard-image', (req, res) => res.json({ success: true }));
+
+// --- USER PAYOUT (Dummy Example) ---
+
+app.post('/api/user/payout', (req, res) => res.json({ success: true }));
+
 app.listen(4000, () => console.log('Server running on http://localhost:4000')); 
