@@ -197,4 +197,10 @@ app.post('/api/register', async (req, res) => {
   res.json(result.rows[0]);
 });
 
+app.get('/api/debug-users', async (req, res) => {
+  const result = await pool.query('SELECT id, username, is_approved FROM users');
+  console.log('DEBUG /api/debug-users:', result.rows);
+  res.json(result.rows);
+});
+
 app.listen(4000, () => console.log('Server running on http://localhost:4000')); 
