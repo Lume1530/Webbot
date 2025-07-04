@@ -112,18 +112,18 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
         <div className="w-full max-w-6xl px-2 sm:px-4 relative overflow-hidden">
           <div className="flex gap-6 sm:gap-10 py-2 whitespace-nowrap animate-marquee" style={{animation: 'marquee 18s linear infinite'}}>
             {[
-              '/client_logo/client logo 1.png',
-              '/client_logo/client logo 2.png',
-              '/client_logo/client logo 3.png',
-              '/client_logo/client logo 4.png',
-              '/client_logo/client logo 5.png',
-              '/client_logo/client logo 6.png',
-              '/client_logo/client logo 1.png',
-              '/client_logo/client logo 2.png',
-              '/client_logo/client logo 3.png',
-              '/client_logo/client logo 4.png',
-              '/client_logo/client logo 5.png',
-              '/client_logo/client logo 6.png',
+              '/Client_logo/client logo 1.png',
+              '/Client_logo/client logo 2.png',
+              '/Client_logo/client logo 3.png',
+              '/Client_logo/client logo 4.png',
+              '/Client_logo/client logo 5.png',
+              '/Client_logo/client logo 6.png',
+              '/Client_logo/client logo 1.png',
+              '/Client_logo/client logo 2.png',
+              '/Client_logo/client logo 3.png',
+              '/Client_logo/client logo 4.png',
+              '/Client_logo/client logo 5.png',
+              '/Client_logo/client logo 6.png',
             ].map((src, i) => (
               <img
                 key={src + i}

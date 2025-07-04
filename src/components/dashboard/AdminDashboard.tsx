@@ -33,11 +33,6 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const [instagramAccounts, setInstagramAccounts] = useState<any[]>([]);
   const [instagramStats, setInstagramStats] = useState({ totalAccounts: 0, activeAccounts: 0, connectedUsers: 0 });
   const [pendingInstagramAccounts, setPendingInstagramAccounts] = useState<any[]>([]);
-  // Add pagination state
-  const [adminReelsPage, setAdminReelsPage] = useState<{ [campaign: string]: number }>({});
-  const ADMIN_REELS_PER_PAGE = 20;
-  // Add a state for success message
-  const [accountSuccessMsg, setAccountSuccessMsg] = useState<string | null>(null);
 
   // Add status options
   const CAMPAIGN_STATUS_OPTIONS = [
@@ -741,16 +736,8 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         <button
                           onClick={async () => {
                             if (window.confirm('Are you sure you want to remove this Instagram account?')) {
-                              const result = await accountService.removeAccount(account.id, true);
-                              if (result.success) {
-                                setAccountSuccessMsg('Instagram account removed successfully.');
-                                // Refresh the account list (call your load function, e.g., loadInstagramAccounts or loadData)
-                                loadInstagramAccounts && loadInstagramAccounts();
-                                // Optionally, clear the message after a few seconds
-                                setTimeout(() => setAccountSuccessMsg(null), 3000);
-                              } else {
-                                alert(result.error || 'Failed to remove account');
-                              }
+                              await accountService.removeAccount(account.id, true);
+                              loadInstagramAccounts();
                             }
                           }}
                           className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
@@ -810,16 +797,8 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           <button
                             onClick={async () => {
                               if (window.confirm('Are you sure you want to remove this Instagram account?')) {
-                                const result = await accountService.removeAccount(account.id, true);
-                                if (result.success) {
-                                  setAccountSuccessMsg('Instagram account removed successfully.');
-                                  // Refresh the account list (call your load function, e.g., loadInstagramAccounts or loadData)
-                                  loadInstagramAccounts && loadInstagramAccounts();
-                                  // Optionally, clear the message after a few seconds
-                                  setTimeout(() => setAccountSuccessMsg(null), 3000);
-                                } else {
-                                  alert(result.error || 'Failed to remove account');
-                                }
+                                await accountService.removeAccount(account.id, true);
+                                loadInstagramAccounts();
                               }
                             }}
                             className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
@@ -1084,168 +1063,143 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                     reelsByCampaign[campaignName].push(reel);
                   });
 
-                  return Object.entries(reelsByCampaign).map(function mapCampaign([campaignName, campaignReels]: [string, any[]]) {
-                    const page = adminReelsPage[campaignName] || 1;
-                    const totalPages = Math.ceil(campaignReels.length / ADMIN_REELS_PER_PAGE);
-                    const paginatedReels = campaignReels.slice((page - 1) * ADMIN_REELS_PER_PAGE, page * ADMIN_REELS_PER_PAGE);
-                    return (
-                      <div key={campaignName} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-8">
-                        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
-                                <Megaphone className="h-5 w-5 text-white" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">{campaignName}</h3>
-                                <p className="text-sm text-gray-600">{campaignReels.length} reels</p>
-                              </div>
+                  return Object.entries(reelsByCampaign).map(([campaignName, campaignReels]) => (
+                    <div key={campaignName} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-lg">
+                              <Megaphone className="h-5 w-5 text-white" />
                             </div>
-                            <div className="flex items-center gap-3">
-                              <div className="text-right">
-                                <p className="text-sm text-gray-600">Total Views</p>
-                                <p className="text-lg font-bold text-blue-600">
-                                  {formatViews(campaignReels.reduce((total, r) => total + (r.views || 0), 0))}
-                                </p>
-                              </div>
-                              {campaignName !== 'General Reels' && campaignReels[0]?.campaign?.id && (
-                                <button
-                                  onClick={() => handleExportCampaignReels(campaignReels[0].campaign.id, campaignName)}
-                                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
-                                >
-                                  <Download className="h-4 w-4" />
-                                  Export
-                                </button>
-                              )}
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">{campaignName}</h3>
+                              <p className="text-sm text-gray-600">{campaignReels.length} reels</p>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-6 py-3 text-left">
-                                  <input
-                                    type="checkbox"
-                                    checked={campaignReels.every(reel => selectedReels.includes(reel.id))}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedReels(prev => [...new Set([...prev, ...campaignReels.map(r => r.id)])]);
-                                      } else {
-                                        setSelectedReels(prev => prev.filter(id => !campaignReels.map(r => r.id).includes(id)));
-                                      }
-                                    }}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                  />
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reel</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Likes</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {paginatedReels.map(reel => (
-                                <tr key={reel.id} className="hover:bg-gray-50 transition-colors">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedReels.includes(reel.id)}
-                                      onChange={(e) => handleSelectReel(reel.id, e.target.checked)}
-                                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center text-white font-semibold">
-                                        {reel.username?.charAt(0)?.toUpperCase() || 'U'}
-                                      </div>
-                                      <div className="ml-4">
-                                        <div className="text-sm font-medium text-gray-900">@{reel.username || 'unknown'}</div>
-                                        <div className="text-sm text-gray-500">{reel.shortcode || 'N/A'}</div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center space-x-3">
-                                      <img 
-                                        src={reel.thumbnail} 
-                                        alt="" 
-                                        className="h-12 w-12 rounded-lg object-cover border border-gray-200"
-                                        onError={(e) => {
-                                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNiAxNkgyNFYyNEgxNlYxNloiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
-                                          }}
-                                        />
-                                      <div>
-                                        <p className="text-sm font-medium text-gray-900">{reel.shortcode || 'N/A'}</p>
-                                        <p className="text-xs text-gray-500">{reel.caption?.substring(0, 50) || 'No caption'}...</p>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                                    {formatViews(reel.views || 0)}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                                    {reel.likes && reel.likes > 0 ? formatViews(reel.likes) : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                                    {reel.comments && reel.comments > 0 ? formatViews(reel.comments) : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {reel.submittedAt ? new Date(reel.submittedAt).toLocaleDateString() : 'N/A'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                                    <div className="flex items-center justify-center space-x-2">
-                                      <a
-                                        href={reel.url || '#'}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                                        title="View Post"
-                                      >
-                                        <Eye className="h-4 w-4" />
-                                      </a>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-sm text-gray-600">Total Views</p>
+                              <p className="text-lg font-bold text-blue-600">
+                                {formatViews(campaignReels.reduce((total, r) => total + (r.views || 0), 0))}
+                              </p>
+                            </div>
+                            {campaignName !== 'General Reels' && campaignReels[0]?.campaign?.id && (
                               <button
-                                onClick={() => handleDeleteReel(reel.id)}
-                                          className="text-red-600 hover:text-red-800 transition-colors"
-                                          title="Delete Reel"
+                                onClick={() => handleExportCampaignReels(campaignReels[0].campaign.id, campaignName)}
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
                               >
-                                          <Trash2 className="h-4 w-4" />
+                                <Download className="h-4 w-4" />
+                                Export
                               </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        {/* Pagination controls */}
-                        {totalPages > 1 && (
-                          <div className="flex justify-center items-center gap-2 py-4">
-                            <button
-                              className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
-                              onClick={() => setAdminReelsPage(p => ({ ...p, [campaignName]: Math.max(1, (p[campaignName] || 1) - 1) }))}
-                              disabled={page === 1}
-                            >
-                              Previous
-                            </button>
-                            <span className="text-sm font-medium text-gray-700">Page {page} of {totalPages}</span>
-                            <button
-                              className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
-                              onClick={() => setAdminReelsPage(p => ({ ...p, [campaignName]: Math.min(totalPages, (p[campaignName] || 1) + 1) }))}
-                              disabled={page === totalPages}
-                            >
-                              Next
-                            </button>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    );
-                  });
+                      
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                              <th className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                                  checked={campaignReels.every(reel => selectedReels.includes(reel.id))}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedReels(prev => [...new Set([...prev, ...campaignReels.map(r => r.id)])]);
+                                    } else {
+                                      setSelectedReels(prev => prev.filter(id => !campaignReels.map(r => r.id).includes(id)));
+                                    }
+                                  }}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reel</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Likes</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                            {campaignReels.map(reel => (
+                              <tr key={reel.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedReels.includes(reel.id)}
+                            onChange={(e) => handleSelectReel(reel.id, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center text-white font-semibold">
+                                      {reel.username?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                    <div className="ml-4">
+                                      <div className="text-sm font-medium text-gray-900">@{reel.username || 'unknown'}</div>
+                                      <div className="text-sm text-gray-500">{reel.shortcode || 'N/A'}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center space-x-3">
+                                    <img 
+                                      src={reel.thumbnail} 
+                                      alt="" 
+                                      className="h-12 w-12 rounded-lg object-cover border border-gray-200"
+                                      onError={(e) => {
+                                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNiAxNkgyNFYyNEgxNlYxNloiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+                                      }}
+                                    />
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-900">{reel.shortcode || 'N/A'}</p>
+                                      <p className="text-xs text-gray-500">{reel.caption?.substring(0, 50) || 'No caption'}...</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                  {formatViews(reel.views || 0)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                                  {reel.likes && reel.likes > 0 ? formatViews(reel.likes) : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                                  {reel.comments && reel.comments > 0 ? formatViews(reel.comments) : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {reel.submittedAt ? new Date(reel.submittedAt).toLocaleDateString() : 'N/A'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <div className="flex items-center justify-center space-x-2">
+                                    <a
+                                      href={reel.url || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                                      title="View Post"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </a>
+                          <button
+                            onClick={() => handleDeleteReel(reel.id)}
+                                      className="text-red-600 hover:text-red-800 transition-colors"
+                                      title="Delete Reel"
+                          >
+                                      <Trash2 className="h-4 w-4" />
+                          </button>
+                                  </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                      </div>
+                    </div>
+                  ));
                 })()}
               </div>
             )}
