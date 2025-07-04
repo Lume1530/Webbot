@@ -37,7 +37,13 @@ app.get('/api/reels/:userId', async (req, res) => {
 // Get all users
 app.get('/api/admin/users', async (req, res) => {
   const result = await pool.query('SELECT * FROM users');
-  res.json(result.rows);
+  // Map is_approved to isApproved and created_at to createdAt for frontend compatibility
+  const users = result.rows.map(u => ({
+    ...u,
+    isApproved: u.is_approved,
+    createdAt: u.created_at,
+  }));
+  res.json(users);
 });
 
 // Approve a user
@@ -165,5 +171,17 @@ app.get('/api/admin/campaigns/:campaignId/leaderboard-image', (req, res) => res.
 // --- USER PAYOUT (Dummy Example) ---
 
 app.post('/api/user/payout', (req, res) => res.json({ success: true }));
+
+// --- USER REGISTRATION (EXAMPLE) ---
+// Register a new user (pending approval by default)
+app.post('/api/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  // Set is_approved to null for pending status
+  const result = await pool.query(
+    'INSERT INTO users (username, email, password, is_approved) VALUES ($1, $2, $3, $4) RETURNING *',
+    [username, email, password, null]
+  );
+  res.json(result.rows[0]);
+});
 
 app.listen(4000, () => console.log('Server running on http://localhost:4000')); 
