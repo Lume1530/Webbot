@@ -179,7 +179,7 @@ app.post('/api/register', async (req, res) => {
   // Set is_approved to null for pending status
   const result = await pool.query(
     'INSERT INTO users (username, email, password, is_approved) VALUES ($1, $2, $3, $4) RETURNING *',
-    [username, email, password, null]
+    [username, email, password, NULL]
   );
   res.json(result.rows[0]);
 });
