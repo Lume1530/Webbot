@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, Eye, Video, DollarSign, Clock } from 'lucide-react';
-import { AnalyticsData } from '../types';
-import { formatViews, formatCurrency } from '../utils/instagram';
+import { AnalyticsData } from '../../types';
+import { formatViews, formatCurrency } from '../../utils/instagram';
 
 interface AnalyticsDashboardProps {
   analytics: AnalyticsData;

@@ -10,10 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "canvas": "^3.1.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.344.0",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.4",
+    "pg": "^8.16.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.8.0"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Heart, MessageCircle, Trash2, Calendar, TrendingUp } from 'lucide-react';
-import { Reel } from '../types';
-import { formatViews } from '../utils/instagram';
+import { Reel } from '../../types';
+import { formatViews } from '../../utils/instagram';
 
 interface ReelCardProps {
   reel: Reel;

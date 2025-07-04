@@ -64,15 +64,6 @@ export function LoginForm({ onLogin, onRegister, isLoading }: LoginFormProps) {
           </p>
         </div>
 
-        {/* Demo Credentials */}
-        <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4 mb-6">
-          <h3 className="text-blue-200 font-semibold mb-2">Demo Credentials:</h3>
-          <div className="text-sm text-blue-100 space-y-1">
-            <div><strong>Admin:</strong> admin / admin123</div>
-            <div><strong>User:</strong> user / user123</div>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-200 mb-2">

@@ -1,15 +1,17 @@
 import React from 'react';
 import { User, BarChart3, Settings, RefreshCw } from 'lucide-react';
-import { User as UserType } from '../types';
-import { formatCurrency } from '../utils/instagram';
+import { User as UserType } from '../../types';
+import { formatCurrency } from '../../utils/instagram';
+import { SessionIndicator } from '../auth/SessionIndicator';
 
 interface HeaderProps {
   user: UserType;
   onForceUpdate: () => void;
   isUpdating: boolean;
+  onSessionExpired?: () => void;
 }
 
-export function Header({ user, onForceUpdate, isUpdating }: HeaderProps) {
+export function Header({ user, onForceUpdate, isUpdating, onSessionExpired }: HeaderProps) {
   return (
     <header className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,6 +46,7 @@ export function Header({ user, onForceUpdate, isUpdating }: HeaderProps) {
               <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
             </button>
 
+            <SessionIndicator onSessionExpired={onSessionExpired} />
             <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
               <User className="h-5 w-5" />
               <span className="font-medium">@{user.username}</span>
