@@ -172,7 +172,10 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+      <div className="relative">
+        <div className="absolute top-4 right-4 z-50">
+          <NotificationCenter />
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 gap-4 md:gap-0">
             <div>
@@ -183,7 +186,6 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
               <p className="text-gray-600">Manage approvals and content moderation</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-              <NotificationCenter />
               <button
                 onClick={onLogout}
                 className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
@@ -196,7 +198,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="border-b border-gray-200">

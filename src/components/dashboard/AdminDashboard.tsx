@@ -474,7 +474,11 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+      {/* --- [Notification Bell Top Right] --- */}
+      <div className="relative">
+        <div className="absolute top-4 right-4 z-50">
+          <NotificationCenter />
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 gap-4 md:gap-0">
             <div>
@@ -482,7 +486,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
               <p className="text-gray-600">Manage users, reels, and tracking</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-              <NotificationCenter />
+              {/* NotificationCenter removed from here */}
               <button
                 onClick={handleForceUpdate}
                 disabled={isUpdating}
@@ -501,8 +505,10 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
           </div>
         </div>
       </div>
+      {/* --- [Notification Bell Top Right END] --- */}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* --- [Add margin to main content to avoid overlap] --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="border-b border-gray-200">
@@ -1437,7 +1443,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </div>
                         </div>
                         
-                        <div className="flex flex-row flex-wrap gap-1 ml-0 sm:ml-4 w-full sm:w-auto mt-2">
+                        <div className="flex flex-row gap-2 ml-auto justify-end w-auto mt-2">
                           <button 
                             className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-8 h-8 p-0" 
                             title="Edit" 
