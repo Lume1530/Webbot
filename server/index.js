@@ -39,7 +39,7 @@ app.get('/api/reels/:userId', async (req, res) => {
 // Get all users
 app.get('/api/admin/users', async (req, res) => {
   const result = await pool.query('SELECT * FROM users');
-  // Map is_approved to isApproved and created_at to createdAt for frontend compatibility
+  console.log('All users from DB:', result.rows);
   const users = result.rows.map(u => ({
     ...u,
     isApproved: u.is_approved,
