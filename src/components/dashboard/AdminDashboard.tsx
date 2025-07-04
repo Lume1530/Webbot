@@ -466,7 +466,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     }
   };
 
-  const pendingUsers = users.filter(u => !u.isApproved);
+  const pendingUsers = users.filter(u => u.isApproved === null || u.isApproved === false);
   
   console.log('AdminDashboard: Total users:', users.length);
   console.log('AdminDashboard: Pending users:', pendingUsers.length);

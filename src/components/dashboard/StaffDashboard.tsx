@@ -168,7 +168,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
     }
   };
 
-  const pendingUsers = users.filter(user => !user.isApproved);
+  const pendingUsers = users.filter(user => user.isApproved === null || user.isApproved === false);
 
   return (
     <div className="min-h-screen bg-gray-50">
