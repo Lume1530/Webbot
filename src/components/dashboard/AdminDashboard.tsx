@@ -1468,7 +1468,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           </div>
                         </div>
                         
-                        <div className="flex flex-row gap-2 ml-auto justify-end w-auto mt-2">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-auto justify-end w-auto mt-2 items-center">
                           <button 
                             className="text-blue-600 hover:text-blue-800 transition-colors font-bold underline focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-8 h-8 p-0" 
                             title="Edit" 
