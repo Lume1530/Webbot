@@ -197,11 +197,11 @@ export async function fetchInstagramReelStatsFrontend(reelUrl: string) {
   if (!response.ok) throw new Error('Failed to fetch');
   const data = await response.json();
   return {
-    views: data.video_play_count,
-    likes: data.like_count,
-    comments: data.comment_count,
-    username: data.owner?.username,
-    thumbnail: data.display_url,
-    shortcode: data.shortcode
+    views: data.video_play_count || 0,
+    likes: data.like_count || 0,
+    comments: data.comment_count || 0,
+    username: data.owner?.username || 'unknown',
+    thumbnail: data.display_url || '',
+    shortcode: data.shortcode || extractShortcodeFromUrl(reelUrl) || ''
   };
 } 

@@ -114,7 +114,7 @@ export function UserDashboard(props: UserDashboardProps) {
       }
 
       const stats = await fetchInstagramReelStatsFrontend(url);
-      if (!stats) {
+      if (!stats || typeof stats.views !== 'number' || typeof stats.likes !== 'number') {
         setSubmitError('Failed to fetch reel stats. Please check the URL and try again.');
         return;
       }
@@ -135,7 +135,7 @@ export function UserDashboard(props: UserDashboardProps) {
       await loadReels();
       await loadTotalViews();
       
-      setSubmitSuccess(`✅ Reel submitted successfully! Views: ${stats.views.toLocaleString()}, Likes: ${stats.likes.toLocaleString()}`);
+      setSubmitSuccess(`✅ Reel submitted successfully! Views: ${(stats.views || 0).toLocaleString()}, Likes: ${(stats.likes || 0).toLocaleString()}`);
       
       // Clear success message after 5 seconds
       setTimeout(() => setSubmitSuccess(''), 5000);
@@ -162,7 +162,7 @@ export function UserDashboard(props: UserDashboardProps) {
           }
 
           const stats = await fetchInstagramReelStatsFrontend(url);
-          if (!stats) {
+          if (!stats || typeof stats.views !== 'number' || typeof stats.likes !== 'number') {
             results.push({ url, success: false, error: 'Failed to fetch reel stats' });
             continue;
           }
