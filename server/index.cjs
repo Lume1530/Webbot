@@ -803,14 +803,7 @@ app.post('/api/reels', authenticateToken, async (req, res) => {
       [userId, url, shortcode, username, stats.views, stats.likes, stats.comments, stats.thumbnail, now, now, isActive, campaign_id]
     );
     
-    // Notify all admins and staff about new reel submission
-    const staffAndAdmins = await pool.query('SELECT id FROM users WHERE role IN ($1, $2)', ['admin', 'staff']);
-    for (const staff of staffAndAdmins.rows) {
-      await pool.query(
-        'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
-        [staff.id, `New reel submitted: @${username} submitted "${shortcode}" for review.`, 'reel_submitted']
-      );
-    }
+    // Note: Removed admin/staff notifications for reel submissions to reduce console spam
     
     res.json(result.rows[0]);
   } catch (error) {

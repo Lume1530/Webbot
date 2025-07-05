@@ -34,6 +34,9 @@ export function ReelCard({ reel, onDelete }: ReelCardProps) {
           src={reel.thumbnail}
           alt={`Reel ${reel.shortcode}`}
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDQ4MCAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0ODAiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNDAgOTZIMzIwVjE2MEgyNDBWOTZaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9IjI0MCIgeT0iMTgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjc3NDhCIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+          }}
         />
         <div className="absolute top-3 right-3">
           <button

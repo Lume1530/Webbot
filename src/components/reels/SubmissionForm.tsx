@@ -63,7 +63,6 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error, userC
 
   const renderSubmissionForm = (campaignId: string, campaignName: string, campaign: any) => {
     const isActive = activeSection === campaignId;
-    console.log('Campaign status:', campaign.status, 'for campaign', campaign);
     const isCampaignActive = (campaign.status || '').trim().toLowerCase() === 'active';
     return (
       <div 
@@ -254,7 +253,6 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error, userC
   // Filter out assignments with missing campaign data
   const validUserCampaigns = userCampaigns.filter(assignment => {
     if (!assignment.campaign) {
-      console.warn('SubmissionForm: Skipping assignment with missing campaign:', assignment);
       return false;
     }
     return true;

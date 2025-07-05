@@ -35,6 +35,7 @@ export function UserDashboard(props: UserDashboardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitUrl, setSubmitUrl] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const [submitLikes, setSubmitLikes] = useState('');
   const [submitComments, setSubmitComments] = useState('');
   const [totalViews, setTotalViews] = useState<number>(0);
@@ -104,6 +105,7 @@ export function UserDashboard(props: UserDashboardProps) {
   const handleSingleReelSubmit = async (url: string, campaignId?: string) => {
     setIsSubmitting(true);
     setSubmitError('');
+    setSubmitSuccess('');
     
     try {
       if (!validateInstagramUrl(url)) {
@@ -133,7 +135,10 @@ export function UserDashboard(props: UserDashboardProps) {
       await loadReels();
       await loadTotalViews();
       
-      alert('Reel submitted successfully!');
+      setSubmitSuccess(`✅ Reel submitted successfully! Views: ${stats.views.toLocaleString()}, Likes: ${stats.likes.toLocaleString()}`);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(''), 5000);
     } catch (error) {
       console.error('Submit reel error:', error);
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit reel');
@@ -145,6 +150,7 @@ export function UserDashboard(props: UserDashboardProps) {
   const handleBulkReelSubmit = async (urls: string[], campaignId?: string) => {
     setIsSubmitting(true);
     setSubmitError('');
+    setSubmitSuccess('');
     
     try {
       const results = [];
@@ -186,7 +192,11 @@ export function UserDashboard(props: UserDashboardProps) {
       const successCount = results.filter(r => r.success).length;
       const failureCount = results.filter(r => !r.success).length;
       
-      alert(`Bulk submission completed!\nSuccess: ${successCount}\nFailed: ${failureCount}`);
+      if (successCount > 0) {
+        setSubmitSuccess(`✅ Bulk submission completed! Success: ${successCount}${failureCount > 0 ? `, Failed: ${failureCount}` : ''}`);
+        // Clear success message after 5 seconds
+        setTimeout(() => setSubmitSuccess(''), 5000);
+      }
       
       if (failureCount > 0) {
         const failedUrls = results.filter(r => !r.success).map(r => `${r.url}: ${r.error}`).join('\n');
@@ -475,7 +485,14 @@ export function UserDashboard(props: UserDashboardProps) {
                   {reels.slice(0, 5).map(reel => (
                     <div key={reel.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-4">
-                        <img src={reel.thumbnail} alt="" className="h-12 w-12 rounded-lg" />
+                        <img 
+  src={reel.thumbnail} 
+  alt="" 
+  className="h-12 w-12 rounded-lg"
+  onError={(e) => {
+    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNiAxNkgyNFYyNEgxNlYxNloiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+  }}
+/>
                         <div>
                           <p className="font-medium text-gray-900">@{reel.username}</p>
                           <p className="text-sm text-gray-600">{reel.shortcode}</p>
@@ -541,7 +558,14 @@ export function UserDashboard(props: UserDashboardProps) {
                         {paginatedReels.map((reel: Reel) => (
                           <div key={reel.id} className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-purple-100 p-2">
                             <div className="relative">
-                              <img src={reel.thumbnail} alt="" className="w-full h-28 object-cover rounded-lg" />
+                              <img 
+  src={reel.thumbnail} 
+  alt="" 
+  className="w-full h-28 object-cover rounded-lg"
+  onError={(e) => {
+    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDI4MCAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTEyIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNDAgNTZIMTgwVjEwMEgxNDBWNTZaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjc3NDhCIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+  }}
+/>
                               {reel.campaign_id && (
                                 <div className="absolute top-2 left-2">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow">
@@ -642,6 +666,21 @@ export function UserDashboard(props: UserDashboardProps) {
         {/* Submit Tab */}
         {activeTab === 'submit' && (
           <div className="max-w-4xl mx-auto">
+            {/* Success Message */}
+            {submitSuccess && (
+              <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-green-800">Success!</h3>
+                  <p className="text-sm text-green-700 mt-1">{submitSuccess}</p>
+                </div>
+              </div>
+            )}
+            
             <SubmissionForm
               onSubmit={handleSingleReelSubmit}
               onBulkSubmit={handleBulkReelSubmit}

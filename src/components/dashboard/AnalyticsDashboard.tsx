@@ -99,6 +99,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
               src={analytics.topPerformingReel.thumbnail}
               alt="Top performing reel"
               className="w-16 h-16 rounded-lg object-cover"
+              onError={(e) => {
+                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMSAzM0g0M1Y0NUgyMVYzM1oiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+              }}
             />
             <div className="flex-1">
               <p className="font-medium text-gray-900">@{analytics.topPerformingReel.username}</p>
@@ -126,6 +129,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
                     src={reel.thumbnail}
                     alt={`Reel ${reel.shortcode}`}
                     className="w-10 h-10 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMyAxM0gyN1YyN0gxM1YxM1oiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+                    }}
                   />
                   <div>
                     <p className="font-medium text-gray-900">@{reel.username}</p>

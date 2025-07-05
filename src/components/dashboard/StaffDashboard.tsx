@@ -677,7 +677,14 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="flex-shrink-0 h-10 w-10">
-                                      <img className="h-10 w-10 rounded-lg object-cover" src={reel.thumbnail} alt={reel.shortcode} />
+                                      <img 
+  className="h-10 w-10 rounded-lg object-cover" 
+  src={reel.thumbnail} 
+  alt={reel.shortcode}
+  onError={(e) => {
+    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMyAxM0gyN1YyN0gxM1YxM1oiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+  }}
+/>
                                     </div>
                                     <div className="ml-4">
                                       <div className="text-sm font-medium text-gray-900">{reel.shortcode}</div>
