@@ -27,135 +27,39 @@ interface RapidAPIResponse {
 
 export const fetchInstagramStatsWithRapidAPI = async ({ url, userId }: { url: string; userId: string }): Promise<InstagramStats> => {
   try {
-    // Extract shortcode from URL
-    const shortcode = extractShortcodeFromUrl(url);
-    if (!shortcode) {
-      throw new Error('Invalid Instagram URL');
-    }
-
-    console.log('Fetching stats for shortcode:', shortcode);
-
-    // Try multiple RapidAPI endpoints specifically for Instagram reels
-    const endpoints = [
-      {
-        url: `https://instagram-data1.p.rapidapi.com/post/info/${shortcode}`,
-        host: 'instagram-data1.p.rapidapi.com'
-      },
-      {
-        url: `https://instagram-scraper-2022.p.rapidapi.com/insta_post/${shortcode}`,
-        host: 'instagram-scraper-2022.p.rapidapi.com'
-      },
-      {
-        url: `https://instagram-bulk-profile-scrapper.p.rapidapi.com/clients/api/ig/media_by_shortcode/${shortcode}`,
-        host: 'instagram-bulk-profile-scrapper.p.rapidapi.com'
-      },
-      {
-        url: `https://instagram-downloader-download-instagram-videos-stories.p.rapidapi.com/index?url=${encodeURIComponent(url)}`,
-        host: 'instagram-downloader-download-instagram-videos-stories.p.rapidapi.com'
+    // Use the new API endpoint
+    const encodedUrl = encodeURIComponent(url);
+    const apiUrl = `https://instagram-scraper-stable-api.p.rapidapi.com/get_media_data.php?reel_post_code_or_url=${encodedUrl}&type=reel`;
+    const options = {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com'
       }
-    ];
-
-    let data: any = null;
-    let lastError: string = '';
-
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying endpoint: ${endpoint.url}`);
-        
-        const options = {
-          method: 'GET',
-          headers: {
-            'X-RapidAPI-Key': RAPIDAPI_KEY,
-            'X-RapidAPI-Host': endpoint.host
-          }
-        };
-
-        const response = await fetch(endpoint.url, options);
-        
-        if (response.ok) {
-          data = await response.json();
-          console.log('API Response from', endpoint.host, ':', data);
-          
-          // Check if we got valid data with view count
-          if (data && (data.data || data.video_view_count || data.status === 'Success')) {
-            break;
-          }
-        } else {
-          lastError = `HTTP ${response.status}: ${response.statusText}`;
-          console.log(`Endpoint failed: ${endpoint.host} - ${lastError}`);
-        }
-      } catch (error) {
-        lastError = error instanceof Error ? error.message : 'Unknown error';
-        console.log(`Endpoint failed: ${endpoint.host} - ${lastError}`);
-        continue;
-      }
+    };
+    const response = await fetch(apiUrl, options);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
-
-    if (!data) {
-      throw new Error(`All API endpoints failed. Last error: ${lastError}`);
-    }
-
-    // Extract view count from different possible response formats
-    let viewCount = 0;
-    let likeCount = 0;
-    let commentCount = 0;
-    let username = 'unknown';
-    let thumbnail = '';
-
-    // Try to extract data from different response formats
-    if (data.data) {
-      viewCount = data.data.video_view_count || data.data.view_count || 0;
-      likeCount = data.data.like_count || data.data.likes || 0;
-      commentCount = data.data.comment_count || data.data.comments || 0;
-      username = data.data.owner?.username || data.data.username || 'unknown';
-      thumbnail = data.data.display_url || data.data.thumbnail || '';
-    } else if (data.video_view_count !== undefined) {
-      viewCount = data.video_view_count;
-      likeCount = data.like_count || 0;
-      commentCount = data.comment_count || 0;
-      username = data.owner?.username || 'unknown';
-      thumbnail = data.display_url || '';
-    } else if (data.result) {
-      // Some APIs return data in a 'result' field
-      viewCount = data.result.video_view_count || data.result.view_count || 0;
-      likeCount = data.result.like_count || data.result.likes || 0;
-      commentCount = data.result.comment_count || data.result.comments || 0;
-      username = data.result.owner?.username || data.result.username || 'unknown';
-      thumbnail = data.result.display_url || data.result.thumbnail || '';
-    }
-
-    // If we still don't have view count, try to estimate from likes
-    if (viewCount === 0 && likeCount > 0) {
-      viewCount = likeCount * 10; // Rough estimate
-      console.log('Using estimated view count from likes:', viewCount);
-    }
-
-    const stats: InstagramStats = {
-      views: viewCount,
-      likes: likeCount,
-      comments: commentCount,
+    const data = await response.json();
+    // Parse the response for views, likes, comments
+    const views = data.video_play_count || 0;
+    const likes = data.edge_media_preview_like?.count || 0;
+    const comments = data.edge_media_preview_comment?.count || 0;
+    const username = data.owner?.username || 'unknown';
+    const shortcode = data.shortcode || extractShortcodeFromUrl(url) || '';
+    const thumbnail = data.display_url || data.thumbnail || '';
+    return {
+      views,
+      likes,
+      comments,
       username,
-      shortcode: data.shortcode || shortcode,
+      shortcode,
       thumbnail: thumbnail || generateThumbnail(shortcode)
     };
-
-    console.log('Final extracted stats:', stats);
-    return stats;
-
   } catch (error) {
-    console.error('Error fetching Instagram stats with RapidAPI:', error);
-    
-    // Try alternative approach - direct Instagram scraping
-    try {
-      const stats = await scrapeInstagramDirectly(url);
-      if (stats.views > 0) {
-        return stats;
-      }
-    } catch (scrapeError) {
-      console.error('Direct scraping also failed:', scrapeError);
-    }
-    
-    // Final fallback: return mock data if all methods fail
+    console.error('Error fetching Instagram stats with new RapidAPI:', error);
+    // Fallback: return mock data
     const shortcode = extractShortcodeFromUrl(url) || 'fallback';
     return {
       views: Math.floor(Math.random() * 10000) + 1000,

@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
 const { createCanvas, registerFont } = require('canvas');
 const nodemailer = require('nodemailer');
+const { fetchInstagramStatsWithRapidAPI } = require('../src/utils/rapidapi');
 
 const app = express();
 
@@ -702,7 +703,7 @@ app.post('/api/admin/users/:id/reject', authenticateToken, requireStaff, async (
 app.post('/api/reels', authenticateToken, async (req, res) => {
   try {
     const {
-      url, shortcode, username, views, likes, comments, thumbnail, isActive, campaign_id
+      url, shortcode, username, thumbnail, isActive, campaign_id
     } = req.body;
     const userId = req.user.id;
 
@@ -739,11 +740,20 @@ app.post('/api/reels', authenticateToken, async (req, res) => {
       });
     }
 
+    // Fetch stats from RapidAPI
+    let stats;
+    try {
+      stats = await fetchInstagramStatsWithRapidAPI({ url, userId });
+    } catch (err) {
+      console.error('Failed to fetch stats from RapidAPI:', err);
+      return res.status(500).json({ error: 'Failed to fetch Instagram stats.' });
+    }
+
     const now = new Date();
     const result = await pool.query(
       `INSERT INTO reels (userId, url, shortcode, username, views, likes, comments, thumbnail, submitted_at, lastUpdated, isActive, campaign_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [userId, url, shortcode, username, views, likes, comments, thumbnail, now, now, isActive, campaign_id]
+      [userId, url, shortcode, username, stats.views, stats.likes, stats.comments, stats.thumbnail, now, now, isActive, campaign_id]
     );
     
     // Notify all admins and staff about new reel submission
