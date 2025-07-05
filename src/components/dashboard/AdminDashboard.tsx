@@ -953,16 +953,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                           <button
                             onClick={() => handleEditUserViews(user)}
                             className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
+                            title="Edit Views"
                           >
-                            <Edit className="h-3 w-3" />
-                            Edit Views
+                            <Edit className="h-4 w-4" />
+                            <span className="hidden sm:inline">Edit Views</span>
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
+                            title="Delete User"
                           >
-                            <Trash2 className="h-3 w-3" />
-                            Delete
+                            <Trash2 className="h-4 w-4" />
+                            <span className="hidden sm:inline">Delete</span>
                           </button>
                         </div>
                       </div>

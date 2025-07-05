@@ -70,24 +70,14 @@ export const NotificationCenter: React.FC = () => {
       {isOpen && (
         <div
           className={
-            `z-50 rounded-lg shadow-lg border border-gray-200 bg-white ` +
-            `absolute ` +
-            `mt-2 ` +
-            `w-80 right-0 ` +
-            `sm:w-80 sm:right-0 ` +
-            `max-w-xs ` +
-            `sm:max-w-none ` +
-            `sm:left-auto ` +
-            `sm:mx-0 ` +
-            `left-0 right-0 mx-2 w-auto top-12 sm:top-auto`
+            `z-50 rounded-xl shadow-xl border border-gray-200 bg-white ` +
+            `absolute mt-2 right-2 top-12 ` +
+            `w-80 sm:w-96 max-w-full ` +
+            `p-4 text-base ` +
+            `overflow-y-auto max-h-[60vh]`
           }
-          style={{
-            // On mobile, make it full width below the bell
-            // On desktop, keep as is
-            ...(window.innerWidth < 640 ? { left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto', width: 'auto', maxWidth: '20rem', top: '3rem' } : {})
-          }}
         >
-          <div className="p-4 border-b border-gray-200">
+          <div className="pb-2 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
               {unreadCount > 0 && (
@@ -101,13 +91,13 @@ export const NotificationCenter: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-72 overflow-y-auto">
             {isLoading ? (
-              <div className="p-4 text-center">
+              <div className="py-8 text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mx-auto"></div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="py-8 text-center text-gray-500">
                 <Bell className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                 <p>No notifications</p>
               </div>
@@ -116,13 +106,13 @@ export const NotificationCenter: React.FC = () => {
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors ${
+                    className={`py-4 px-2 hover:bg-gray-50 transition-colors ${
                       !notification.is_read ? 'bg-blue-50' : ''
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">{notification.message}</p>
+                        <p className="text-sm text-gray-900 break-words">{notification.message}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
@@ -144,7 +134,7 @@ export const NotificationCenter: React.FC = () => {
           </div>
 
           {/* Close button */}
-          <div className="p-2 border-t border-gray-200">
+          <div className="pt-2 border-t border-gray-200">
             <button
               onClick={() => setIsOpen(false)}
               className="w-full text-sm text-gray-600 hover:text-gray-800 py-1"
