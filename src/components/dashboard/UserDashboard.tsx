@@ -571,13 +571,13 @@ export function UserDashboard(props: UserDashboardProps) {
                   const paginatedReels = campaignReels.slice((page - 1) * REELS_PER_PAGE, page * REELS_PER_PAGE);
                   return (
                     <div key={campaignName} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-                      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                        <div className="flex flex-row items-center gap-2 justify-start">
                           <Megaphone className="h-5 w-5 text-purple-600" />
                           <span className="text-lg font-semibold text-gray-900">{campaignName}</span>
                           <span className="ml-2 text-xs text-gray-500">{campaignReels.length} reels</span>
                         </div>
-                        <div className="text-right">
+                        <div className="flex flex-row items-center gap-1 sm:justify-end justify-start">
                           <span className="text-xs text-gray-600">Total Views</span>
                           <span className="ml-2 text-base font-bold text-blue-600">{
                             formatViews(campaignReels.reduce((total: number, r: Reel) => total + (Number(r.views) || 0), 0))
