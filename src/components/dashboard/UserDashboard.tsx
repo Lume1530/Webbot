@@ -131,7 +131,20 @@ export function UserDashboard(props: UserDashboardProps) {
         campaign_id: campaignId
       };
 
-      await reelApiService.submitReel(reelData);
+      const result = await reelApiService.submitReel(reelData);
+      
+      if (!result.success) {
+        // Handle specific error messages
+        if (result.error?.includes('duplicate') || result.error?.includes('already exists')) {
+          setSubmitError('❌ Video already submitted. This reel has already been added to your account.');
+        } else if (result.error?.includes('Account does not belong to you') || result.error?.includes('not approved')) {
+          setSubmitError('❌ Account does not belong to you. Please add and get approval for this Instagram account first.');
+        } else {
+          setSubmitError(`❌ ${result.error || 'Failed to submit reel'}`);
+        }
+        return;
+      }
+      
       await loadReels();
       await loadTotalViews();
       
@@ -141,7 +154,7 @@ export function UserDashboard(props: UserDashboardProps) {
       setTimeout(() => setSubmitSuccess(''), 5000);
     } catch (error) {
       console.error('Submit reel error:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Failed to submit reel');
+      setSubmitError('❌ Failed to submit reel. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -179,8 +192,20 @@ export function UserDashboard(props: UserDashboardProps) {
             campaign_id: campaignId
           };
 
-          await reelApiService.submitReel(reelData);
-          results.push({ url, success: true });
+          const result = await reelApiService.submitReel(reelData);
+          
+          if (!result.success) {
+            // Handle specific error messages for bulk submission
+            let errorMessage = result.error || 'Unknown error';
+            if (result.error?.includes('duplicate') || result.error?.includes('already exists')) {
+              errorMessage = 'Video already submitted';
+            } else if (result.error?.includes('Account does not belong to you') || result.error?.includes('not approved')) {
+              errorMessage = 'Account does not belong to you';
+            }
+            results.push({ url, success: false, error: errorMessage });
+          } else {
+            results.push({ url, success: true });
+          }
         } catch (error) {
           results.push({ url, success: false, error: error instanceof Error ? error.message : 'Unknown error' });
         }
@@ -199,6 +224,11 @@ export function UserDashboard(props: UserDashboardProps) {
       }
       
       if (failureCount > 0) {
+        // Show detailed error message for bulk failures
+        const failedDetails = results.filter(r => !r.success).map(r => `${r.error}`).join(', ');
+        setSubmitError(`❌ Some reels failed to submit: ${failedDetails}`);
+        
+        // Log detailed failures for debugging
         const failedUrls = results.filter(r => !r.success).map(r => `${r.url}: ${r.error}`).join('\n');
         console.error('Failed submissions:', failedUrls);
       }
