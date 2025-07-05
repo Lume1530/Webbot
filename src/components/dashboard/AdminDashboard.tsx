@@ -1111,7 +1111,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             <div className="text-right">
                               <p className="text-sm text-gray-600">Total Views</p>
                               <p className="text-lg font-bold text-blue-600">
-                                {formatViews(campaignReels.reduce((total, r) => total + (r.views || 0), 0))}
+                                {formatViews(campaignReels.reduce((total, r) => total + (Number(r.views) || 0), 0))}
                               </p>
                             </div>
                             {campaignName !== 'General Reels' && campaignReels[0]?.campaign?.id && (
