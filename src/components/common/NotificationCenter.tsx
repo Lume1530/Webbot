@@ -71,11 +71,12 @@ export const NotificationCenter: React.FC = () => {
         <div
           className={
             `z-50 rounded-xl shadow-xl border border-gray-200 bg-white ` +
-            `absolute mt-2 right-2 top-12 ` +
-            `w-96 max-w-full ` +
+            `absolute mt-2 left-1/2 -translate-x-1/2 ` +
+            `w-[22rem] sm:w-[28rem] max-w-[95vw] ` +
             `p-4 text-base ` +
             `overflow-y-auto max-h-[60vh]`
           }
+          style={{ minWidth: '16rem' }}
         >
           <div className="pb-2 border-b border-gray-200">
             <div className="flex items-center justify-between">
