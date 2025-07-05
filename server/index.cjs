@@ -1632,16 +1632,19 @@ app.get('/api/admin/campaigns/:id/export-summary', authenticateToken, requireAdm
       { header: 'Username', key: 'username', width: 20 },
       { header: 'Total Views', key: 'totalViews', width: 15 },
       { header: 'Total Vids', key: 'totalVids', width: 12 },
-      { header: 'Payment Method', key: 'payment', width: 30 },
+      { header: 'USDT', key: 'usdt', width: 24 },
+      { header: 'UPI', key: 'upi', width: 24 },
+      { header: 'PayPal', key: 'paypal', width: 24 },
       { header: 'Estimated Payout', key: 'payout', width: 18 }
     ];
     for (const stat of Object.values(userStats)) {
-      let payment = stat.usdt ? `USDT: ${stat.usdt}` : stat.upi ? `UPI: ${stat.upi}` : stat.paypal ? `PayPal: ${stat.paypal}` : '';
       sheet.addRow({
         username: stat.username,
         totalViews: stat.totalViews,
         totalVids: stat.totalVids,
-        payment,
+        usdt: stat.usdt || '',
+        upi: stat.upi || '',
+        paypal: stat.paypal || '',
         payout: stat.payout.toFixed(2)
       });
     }
@@ -1655,7 +1658,7 @@ app.get('/api/admin/campaigns/:id/export-summary', authenticateToken, requireAdm
   }
 });
 
-// Export campaign leaderboard image
+// Export campaign leaderboard image (single column)
 app.get('/api/admin/campaigns/:id/leaderboard-image', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1675,13 +1678,11 @@ app.get('/api/admin/campaigns/:id/leaderboard-image', authenticateToken, require
     let leaderboard = reelsResult.rows;
     // Limit to top 100
     if (leaderboard.length > 100) leaderboard = leaderboard.slice(0, 100);
-    // Two columns layout
-    const width = 900;
-    const colWidth = width / 2;
+    // Single column layout
+    const width = 600;
     const rowHeight = 48;
     const headerHeight = 80;
-    const numRows = Math.ceil(leaderboard.length / 2);
-    const height = headerHeight + numRows * rowHeight + 40;
+    const height = headerHeight + leaderboard.length * rowHeight + 40;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
     // Background
@@ -1699,20 +1700,14 @@ app.get('/api/admin/campaigns/:id/leaderboard-image', authenticateToken, require
     ctx.fillText('Rank', 40, headerHeight);
     ctx.fillText('Username', 120, headerHeight);
     ctx.fillText('Total Views', 340, headerHeight);
-    ctx.fillText('Rank', 40 + colWidth, headerHeight);
-    ctx.fillText('Username', 120 + colWidth, headerHeight);
-    ctx.fillText('Total Views', 340 + colWidth, headerHeight);
-    // Rankings in two columns
+    // Rankings in single column
     ctx.font = '18px Arial';
     ctx.fillStyle = '#22223b';
     for (let i = 0; i < leaderboard.length; i++) {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const y = headerHeight + (row + 1) * rowHeight;
-      const xOffset = col * colWidth;
-      ctx.fillText(`${i + 1}.`, 40 + xOffset, y);
-      ctx.fillText(leaderboard[i].username, 120 + xOffset, y);
-      ctx.fillText(Number(leaderboard[i].total_views).toLocaleString(), 340 + xOffset, y);
+      const y = headerHeight + (i + 1) * rowHeight;
+      ctx.fillText(`${i + 1}.`, 40, y);
+      ctx.fillText(leaderboard[i].username, 120, y);
+      ctx.fillText(Number(leaderboard[i].total_views).toLocaleString(), 340, y);
     }
     // Border
     ctx.strokeStyle = '#4f46e5';
