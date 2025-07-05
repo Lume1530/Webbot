@@ -385,32 +385,30 @@ export function UserDashboard(props: UserDashboardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-purple-100 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            {/* Left: Tagline */}
-            <div className="flex-1 flex flex-col justify-center">
+          <div className="py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Tagline (left on desktop) */}
+            <div className="md:flex-1 flex flex-col justify-center">
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600">Welcome back, {user.username}</p>
             </div>
-            {/* Right: Notification and Stats */}
-            <div className="flex-1 flex flex-col items-end w-full md:w-auto">
-              <div className="w-full md:w-auto flex flex-col md:items-end">
-                <div className="mb-4 md:mb-0 w-full md:w-auto">
-                  <NotificationCenter />
-                </div>
-                <div className="flex flex-row gap-4 w-full md:flex-col md:gap-4">
-                  <div className="flex items-center bg-white rounded-lg shadow-sm px-4 py-2 min-w-[120px] border border-gray-100 w-1/2 md:w-full">
-                    <Eye className="h-5 w-5 text-blue-500 mr-2" />
-                    <div>
-                      <div className="text-xs text-gray-500 font-medium">Total Views</div>
-                      <div className="text-lg font-bold text-gray-900">{formatViews(stats.totalViews)}</div>
-                    </div>
+            {/* Notification, Total Views, Estimated Payout (right on desktop, in a row) */}
+            <div className="flex flex-col md:flex-row md:items-center md:gap-6 w-full md:w-auto">
+              <div className="mb-4 md:mb-0 md:mr-4">
+                <NotificationCenter />
+              </div>
+              <div className="flex flex-row gap-4 md:gap-6 w-full md:w-auto">
+                <div className="flex items-center bg-white rounded-lg shadow-sm px-4 py-2 min-w-[120px] border border-gray-100 w-1/2 md:w-auto">
+                  <Eye className="h-5 w-5 text-blue-500 mr-2" />
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium">Total Views</div>
+                    <div className="text-lg font-bold text-gray-900">{formatViews(stats.totalViews)}</div>
                   </div>
-                  <div className="flex items-center bg-white rounded-lg shadow-sm px-4 py-2 min-w-[140px] border border-gray-100 w-1/2 md:w-full">
-                    <DollarSign className="h-5 w-5 text-green-500 mr-2" />
-                    <div>
-                      <div className="text-xs text-gray-500 font-medium">Estimated Payout</div>
-                      <div className="text-lg font-bold text-green-600">{formatCurrency(stats.payoutAmount)}</div>
-                    </div>
+                </div>
+                <div className="flex items-center bg-white rounded-lg shadow-sm px-4 py-2 min-w-[140px] border border-gray-100 w-1/2 md:w-auto">
+                  <DollarSign className="h-5 w-5 text-green-500 mr-2" />
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium">Estimated Payout</div>
+                    <div className="text-lg font-bold text-green-600">{formatCurrency(stats.payoutAmount)}</div>
                   </div>
                 </div>
               </div>
