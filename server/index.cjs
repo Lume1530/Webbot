@@ -9,7 +9,22 @@ const { createCanvas, registerFont } = require('canvas');
 const nodemailer = require('nodemailer');
 
 const app = express();
-app.use(cors());
+
+// Configure CORS for your domain
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // Development
+    'http://localhost:3000', // Alternative dev port
+    'https://dlsgroup.org.in', // Your domain
+    'http://dlsgroup.org.in', // HTTP fallback
+    'https://www.dlsgroup.org.in', // WWW subdomain
+    'http://www.dlsgroup.org.in' // WWW HTTP fallback
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -1689,7 +1704,14 @@ app.delete('/api/admin/accounts/:id', authenticateToken, requireStaff, async (re
 });
 
 // Ensure the server starts
-app.listen(4000, () => console.log('Server running on http://localhost:4000'));
+const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
+  console.log(`🌐 Domain: dlsgroup.org.in`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
 
 app.post('/api/send-support-mail', async (req, res) => {
   try {
