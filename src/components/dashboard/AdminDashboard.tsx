@@ -478,35 +478,36 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       <div className="relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Row */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4 md:gap-0">
+          <div className="flex flex-row justify-between items-start sm:items-center py-6 gap-4 md:gap-0">
             {/* Left: Heading and tagline */}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage users, reels, and tracking</p>
+            <div className="flex flex-col flex-1">
+              <div className="flex flex-row items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                  <p className="text-gray-600">Manage users, reels, and tracking</p>
+                </div>
+                {/* Notification button always on right of tagline on mobile and desktop */}
+                <div className="ml-2">
+                  <NotificationCenter />
+                </div>
+              </div>
             </div>
-            {/* Right: Notification, Force Update, Logout (row on desktop, stacked on mobile) */}
-            <div className="flex flex-row items-center space-x-2 sm:space-x-4 ml-auto">
-              {/* Notification button */}
-              <div className="relative">
-                <NotificationCenter />
-              </div>
-              {/* Force Update and Logout: row on desktop, below on mobile */}
-              <div className="hidden sm:flex flex-row items-center space-x-2">
-                <button
-                  onClick={handleForceUpdate}
-                  disabled={isUpdating}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50"
-                >
-                  <Activity className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
-                  <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
-                >
-                  Logout
-                </button>
-              </div>
+            {/* Right: Force Update and Logout (row on desktop, below on mobile) */}
+            <div className="hidden sm:flex flex-row items-center space-x-2 sm:space-x-4 ml-auto">
+              <button
+                onClick={handleForceUpdate}
+                disabled={isUpdating}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50"
+              >
+                <Activity className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
+                <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
+              </button>
+              <button
+                onClick={onLogout}
+                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
+              >
+                Logout
+              </button>
             </div>
           </div>
           {/* Mobile: Force Update and Logout below header row */}
