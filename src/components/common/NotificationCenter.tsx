@@ -71,10 +71,11 @@ export const NotificationCenter: React.FC = () => {
         <div
           className={
             `z-50 rounded-xl shadow-xl border border-gray-200 bg-white ` +
-            `absolute mt-2 left-1/2 -translate-x-1/2 ` +
+            `absolute mt-2 ` +
             `w-[22rem] sm:w-[28rem] max-w-[95vw] ` +
             `p-4 text-base ` +
-            `overflow-y-auto max-h-[60vh]`
+            `overflow-y-auto max-h-[60vh] ` +
+            `left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:ml-0`
           }
           style={{ minWidth: '16rem' }}
         >
