@@ -173,27 +173,44 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative">
-        <div className="absolute top-4 right-4 z-50">
-          <NotificationCenter />
-        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 gap-4 md:gap-0">
-            <div>
+          {/* Header Row */}
+          <div className="flex flex-row justify-between items-start sm:items-center py-6 gap-4 md:gap-0">
+            {/* Left: Tagline */}
+            <div className="flex flex-col flex-1">
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
                 <Shield className="h-8 w-8 text-blue-600" />
                 Staff Dashboard
               </h1>
               <p className="text-gray-600">Manage approvals and content moderation</p>
+              {/* Notification button below tagline on mobile only */}
+              <div className="flex sm:hidden mt-2">
+                <NotificationCenter />
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+            {/* Right: Notification (desktop), Logout */}
+            <div className="hidden sm:flex flex-row items-center space-x-2 sm:space-x-4 ml-auto">
+              <div className="relative">
+                <NotificationCenter />
+              </div>
               <button
                 onClick={onLogout}
-                className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
+                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
               >
                 <LogOut className="h-4 w-4 inline mr-2" />
                 Logout
               </button>
             </div>
+          </div>
+          {/* Mobile: Logout below header row */}
+          <div className="flex sm:hidden flex-row items-center justify-end space-x-2 mb-4">
+            <button
+              onClick={onLogout}
+              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200 w-full"
+            >
+              <LogOut className="h-4 w-4 inline mr-2" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -502,6 +519,21 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
                               </span>
                             </div>
                           </div>
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to delete this Instagram account?')) {
+                                await accountService.removeAccount(account.id, true);
+                                loadInstagramAccounts();
+                              }
+                            }}
+                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                            title="Delete Account"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </button>
                         </div>
                       </div>
                     </div>

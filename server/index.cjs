@@ -287,11 +287,15 @@ app.delete('/api/accounts/:id', authenticateToken, async (req, res) => {
 app.get('/api/accounts', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const result = await pool.query(
-      'SELECT * FROM instagram_accounts WHERE user_id = $1 AND (is_approved = true OR is_approved IS NULL) ORDER BY submitted_at DESC',
-      [userId]
-    );
-
+    const userRole = req.user.role;
+    let result;
+    if (userRole === 'admin' || userRole === 'staff') {
+      // Staff and admin see all accounts
+      result = await pool.query('SELECT * FROM instagram_accounts ORDER BY submitted_at DESC');
+    } else {
+      // Regular users see only their own
+      result = await pool.query('SELECT * FROM instagram_accounts WHERE user_id = $1 AND (is_approved = true OR is_approved IS NULL) ORDER BY submitted_at DESC', [userId]);
+    }
     res.json(result.rows);
   } catch (error) {
     console.error('Get accounts error:', error);
