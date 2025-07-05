@@ -476,32 +476,55 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     <div className="min-h-screen bg-gray-50">
       {/* --- [Notification Bell Top Right] --- */}
       <div className="relative">
-        <div className="absolute top-4 right-4 z-50">
-          <NotificationCenter />
-        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 gap-4 md:gap-0">
-            <div>
+          {/* Header Row */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4 md:gap-0">
+            {/* Left: Heading and tagline */}
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600">Manage users, reels, and tracking</p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-              {/* NotificationCenter removed from here */}
-              <button
-                onClick={handleForceUpdate}
-                disabled={isUpdating}
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50"
-              >
-                <Activity className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
-                <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200 mt-2 sm:mt-0"
-              >
-                Logout
-              </button>
+            {/* Right: Notification, Force Update, Logout (row on desktop, stacked on mobile) */}
+            <div className="flex flex-row items-center space-x-2 sm:space-x-4 ml-auto">
+              {/* Notification button */}
+              <div className="relative">
+                <NotificationCenter />
+              </div>
+              {/* Force Update and Logout: row on desktop, below on mobile */}
+              <div className="hidden sm:flex flex-row items-center space-x-2">
+                <button
+                  onClick={handleForceUpdate}
+                  disabled={isUpdating}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50"
+                >
+                  <Activity className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
+                  <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
+          </div>
+          {/* Mobile: Force Update and Logout below header row */}
+          <div className="flex sm:hidden flex-row items-center justify-end space-x-2 mb-4">
+            <button
+              onClick={handleForceUpdate}
+              disabled={isUpdating}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 w-full"
+            >
+              <Activity className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
+              <span>{isUpdating ? 'Updating...' : 'Force Update'}</span>
+            </button>
+            <button
+              onClick={onLogout}
+              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg text-base transition-all border border-red-200 w-full"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
