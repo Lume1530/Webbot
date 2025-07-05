@@ -17,6 +17,15 @@ if (!RAPIDAPI_KEY) {
   process.exit(1);
 }
 
+// Helper function to format dates consistently
+const formatDateForDisplay = (date) => {
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
+
 // Function to fetch Instagram stats using the new RapidAPI
 const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
   try {
@@ -53,13 +62,24 @@ const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
     const shortcode = data.shortcode || '';
     const thumbnail = data.display_url || data.thumbnail || '';
     
+    // Extract post date from Instagram data
+    let postDate = null;
+    if (data.taken_at_timestamp) {
+      // Instagram provides timestamp in seconds since epoch
+      postDate = new Date(data.taken_at_timestamp * 1000);
+    } else if (data.edge_media_to_caption?.edges?.[0]?.node?.created_at) {
+      // Alternative field for post date
+      postDate = new Date(data.edge_media_to_caption.edges[0].node.created_at);
+    }
+    
     return {
       views,
       likes,
       comments,
       username,
       shortcode,
-      thumbnail
+      thumbnail,
+      postDate
     };
   } catch (error) {
     console.error('Error fetching Instagram stats with RapidAPI:', error.message);
@@ -76,7 +96,8 @@ const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
       comments: Math.floor(Math.random() * 100) + 10,
       username: 'instagram_user',
       shortcode: '',
-      thumbnail: ''
+      thumbnail: '',
+      postDate: new Date() // Use current date as fallback
     };
   }
 };
@@ -777,11 +798,13 @@ app.post('/api/reels', authenticateToken, async (req, res) => {
     }
 
     // If campaign_id is provided, verify campaign is active
+    let campaign = null;
     if (campaign_id) {
       const campaignResult = await pool.query('SELECT * FROM campaigns WHERE id = $1', [campaign_id]);
       if (campaignResult.rows.length === 0 || campaignResult.rows[0].status !== 'active') {
         return res.status(403).json({ error: 'This campaign is not active.' });
       }
+      campaign = campaignResult.rows[0];
     }
 
     // Check for duplicate reel (by URL or shortcode, case-insensitive)
@@ -806,11 +829,31 @@ app.post('/api/reels', authenticateToken, async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch Instagram stats.' });
     }
 
+    // Check post date restriction if campaign has min_post_date set
+    if (campaign && campaign.min_post_date) {
+      if (!stats.postDate) {
+        return res.status(400).json({ 
+          error: 'Unable to determine the post date of this reel. Please try again or contact support if the issue persists.' 
+        });
+      }
+      
+      const minPostDate = new Date(campaign.min_post_date);
+      const postDate = new Date(stats.postDate);
+      
+      if (postDate < minPostDate) {
+        const formattedMinDate = formatDateForDisplay(minPostDate);
+        const formattedPostDate = formatDateForDisplay(postDate);
+        return res.status(400).json({ 
+          error: `This reel was posted on ${formattedPostDate}. Only reels posted on or after ${formattedMinDate} are allowed. Please submit a newer reel.` 
+        });
+      }
+    }
+
     const now = new Date();
     const result = await pool.query(
-      `INSERT INTO reels (userId, url, shortcode, username, views, likes, comments, thumbnail, submitted_at, lastUpdated, isActive, campaign_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [userId, url, shortcode, username, stats.views, stats.likes, stats.comments, stats.thumbnail, now, now, isActive, campaign_id]
+      `INSERT INTO reels (userId, url, shortcode, username, views, likes, comments, thumbnail, submitted_at, lastUpdated, isActive, campaign_id, post_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [userId, url, shortcode, username, stats.views, stats.likes, stats.comments, stats.thumbnail, now, now, isActive, campaign_id, stats.postDate]
     );
     
     // Note: Removed admin/staff notifications for reel submissions to reduce console spam
@@ -1004,8 +1047,12 @@ app.get('/api/reels/total-views', authenticateToken, async (req, res) => {
 //   description TEXT,
 //   requirements TEXT,
 //   platform VARCHAR(32) NOT NULL, -- 'instagram', 'tiktok', 'youtube', 'twitter'
+//   min_post_date DATE, -- Minimum date for Instagram posts to be accepted
 //   created_at TIMESTAMP DEFAULT NOW()
 // );
+
+// --- ADD MIN_POST_DATE TO EXISTING CAMPAIGNS TABLE (run this SQL in your DB) ---
+// ALTER TABLE campaigns ADD COLUMN min_post_date DATE;
 
 // --- CAMPAIGN ASSIGNMENTS TABLE MIGRATION (run this SQL in your DB) ---
 // CREATE TABLE campaign_assignments (
@@ -1020,14 +1067,17 @@ app.get('/api/reels/total-views', authenticateToken, async (req, res) => {
 // --- ADD CAMPAIGN_ID TO REELS TABLE (run this SQL in your DB) ---
 // ALTER TABLE reels ADD COLUMN campaign_id INTEGER REFERENCES campaigns(id) ON DELETE SET NULL;
 
+// --- ADD POST_DATE TO REELS TABLE (run this SQL in your DB) ---
+// ALTER TABLE reels ADD COLUMN post_date TIMESTAMP;
+
 // --- CAMPAIGNS API ---
 // Create a campaign (admin only)
 app.post('/api/campaigns', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name, pay_rate, total_budget, description, requirements, platform, status } = req.body;
+    const { name, pay_rate, total_budget, description, requirements, platform, status, min_post_date } = req.body;
     const result = await pool.query(
-      'INSERT INTO campaigns (name, pay_rate, total_budget, description, requirements, platform, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, pay_rate, total_budget, description, requirements, platform, status || 'active']
+      'INSERT INTO campaigns (name, pay_rate, total_budget, description, requirements, platform, status, min_post_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [name, pay_rate, total_budget, description, requirements, platform, status || 'active', min_post_date || null]
     );
     res.status(201).json({ campaign: result.rows[0] });
   } catch (error) {
@@ -1049,18 +1099,18 @@ app.get('/api/campaigns', async (req, res) => {
     
     let query;
     if (assignmentsTableExists.rows[0].exists) {
-      query = `
-        SELECT 
-          c.*,
-          COALESCE(COUNT(DISTINCT CASE WHEN ca.status = 'active' THEN ca.user_id END), 0) as active_users,
-          COALESCE(SUM(r.views), 0) as total_views,
-          (COALESCE(SUM(r.views), 0) / 1000000.0 * c.pay_rate) as estimated_payout
-        FROM campaigns c
-        LEFT JOIN campaign_assignments ca ON c.id = ca.campaign_id
-        LEFT JOIN reels r ON c.id = r.campaign_id
-        GROUP BY c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.created_at, c.status
-        ORDER BY c.created_at DESC
-      `;
+              query = `
+          SELECT 
+            c.*,
+            COALESCE(COUNT(DISTINCT CASE WHEN ca.status = 'active' THEN ca.user_id END), 0) as active_users,
+            COALESCE(SUM(r.views), 0) as total_views,
+            (COALESCE(SUM(r.views), 0) / 1000000.0 * c.pay_rate) as estimated_payout
+          FROM campaigns c
+          LEFT JOIN campaign_assignments ca ON c.id = ca.campaign_id
+          LEFT JOIN reels r ON c.id = r.campaign_id
+          GROUP BY c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.created_at, c.status, c.min_post_date
+          ORDER BY c.created_at DESC
+        `;
     } else {
       // If campaign_assignments table doesn't exist, just get basic campaign data
       query = `
@@ -1071,7 +1121,7 @@ app.get('/api/campaigns', async (req, res) => {
           (COALESCE(SUM(r.views), 0) / 1000000.0 * c.pay_rate) as estimated_payout
         FROM campaigns c
         LEFT JOIN reels r ON c.id = r.campaign_id
-        GROUP BY c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.created_at, c.status
+        GROUP BY c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.created_at, c.status, c.min_post_date
         ORDER BY c.created_at DESC
       `;
     }
@@ -1105,11 +1155,11 @@ app.delete('/api/campaigns/:id', authenticateToken, requireAdmin, async (req, re
 app.put('/api/campaigns/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const campaignId = req.params.id;
-    const { name, pay_rate, total_budget, description, requirements, platform, status } = req.body;
+    const { name, pay_rate, total_budget, description, requirements, platform, status, min_post_date } = req.body;
     
     const result = await pool.query(
-      'UPDATE campaigns SET name = $1, pay_rate = $2, total_budget = $3, description = $4, requirements = $5, platform = $6, status = $7 WHERE id = $8 RETURNING *',
-      [name, pay_rate, total_budget, description, requirements, platform, status, campaignId]
+      'UPDATE campaigns SET name = $1, pay_rate = $2, total_budget = $3, description = $4, requirements = $5, platform = $6, status = $7, min_post_date = $8 WHERE id = $9 RETURNING *',
+      [name, pay_rate, total_budget, description, requirements, platform, status, min_post_date || null, campaignId]
     );
     
     if (result.rows.length === 0) {
@@ -1403,7 +1453,8 @@ app.get('/api/user/campaigns', authenticateToken, async (req, res) => {
         c.requirements as campaign_requirements,
         c.platform as campaign_platform,
         c.created_at as campaign_created_at,
-        c.status as campaign_status
+        c.status as campaign_status,
+        c.min_post_date as campaign_min_post_date
       FROM campaign_assignments ca
       INNER JOIN campaigns c ON ca.campaign_id = c.id
       WHERE ca.user_id = $1 AND ca.status = 'active'
@@ -1426,7 +1477,8 @@ app.get('/api/user/campaigns', authenticateToken, async (req, res) => {
         requirements: row.campaign_requirements,
         platform: row.campaign_platform,
         created_at: row.campaign_created_at,
-        status: row.campaign_status
+        status: row.campaign_status,
+        min_post_date: row.campaign_min_post_date
       }
     }));
     
@@ -1443,7 +1495,7 @@ app.get('/api/campaigns/available', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     
     const result = await pool.query(`
-      SELECT c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.status, c.created_at
+      SELECT c.id, c.name, c.pay_rate, c.total_budget, c.description, c.requirements, c.platform, c.status, c.created_at, c.min_post_date
       FROM campaigns c
       WHERE c.id NOT IN (
         SELECT campaign_id 
@@ -1843,8 +1895,8 @@ app.post('/api/admin/campaigns/:id/force-update', authenticateToken, requireAdmi
         try {
           const stats = await fetchInstagramStatsWithRapidAPI({ url: reel.url, userId: reel.userid });
           await pool.query(
-            'UPDATE reels SET views = $1, likes = $2, comments = $3, lastUpdated = NOW() WHERE id = $4',
-            [stats.views, stats.likes, stats.comments, reel.id]
+            'UPDATE reels SET views = $1, likes = $2, comments = $3, post_date = $4, lastUpdated = NOW() WHERE id = $5',
+            [stats.views, stats.likes, stats.comments, stats.postDate, reel.id]
           );
           updated++;
           
