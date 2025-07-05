@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LoginForm, AdminDashboard, StaffDashboard, UserDashboard } from './components';
 import { authService } from './services/authService';
 import { LogOut, Instagram, Send, Megaphone, Users, User, Briefcase, Youtube, X as XIcon, Bitcoin, IndianRupee, Mail, Menu as MenuIcon, X as CloseIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Helper for smooth scroll
 function scrollToRef(ref: React.RefObject<HTMLElement>) {
@@ -89,8 +90,13 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
       </nav>
       {/* Logo at top left - bigger and more prominent */}
       <img src="/Dls_grouplogo.png" alt="DLS Group Logo" className="h-16 md:h-28 w-auto absolute top-4 md:top-8 left-4 md:left-8 z-10 drop-shadow-xl" style={{maxHeight: '110px'}} />
-      {/* Hero Section - centered container */}
-      <div className="w-full flex justify-center">
+      {/* Hero Section - centered container with animation */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="w-full flex justify-center"
+      >
         <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between py-10 px-4 md:px-12 gap-8 md:gap-0">
           {/* Left: Tagline and Buttons */}
           <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left mt-20 md:mt-0">
@@ -106,9 +112,14 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
             <img src="/dls_website_hero.png" alt="Creators" className="rounded-2xl shadow-xl w-full max-w-2xl h-72 md:h-[520px] object-contain object-center" style={{maxHeight: '520px'}} />
           </div>
         </div>
-      </div>
+      </motion.div>
       {/* Client Logos Row - 6 real logos, spaced inside container, no background */}
-      <div className="w-full flex justify-center bg-[#09090B] border-y border-[#1a1a1a] mb-8 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+        className="w-full flex justify-center bg-[#09090B] border-y border-[#1a1a1a] mb-8 overflow-hidden"
+      >
         <div className="w-full max-w-6xl px-2 sm:px-4 relative overflow-hidden">
           <div className="flex gap-6 sm:gap-10 py-2 whitespace-nowrap animate-marquee" style={{animation: 'marquee 18s linear infinite'}}>
             {[
@@ -143,9 +154,15 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
             .animate-marquee { scrollbar-width: none; -ms-overflow-style: none; }
           `}</style>
         </div>
-      </div>
+      </motion.div>
       {/* Stats Section */}
-      <div ref={statsRef} className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-6 pb-16 px-4">
+      <motion.div
+        ref={statsRef}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.4, ease: 'easeOut' }}
+        className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-6 pb-16 px-4"
+      >
         <div className="bg-[#181014] rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a]">
           <span className="text-4xl font-extrabold text-white mb-1">$127.2K+</span>
           <span className="text-gray-300 text-lg">Paid to creators</span>
@@ -162,14 +179,25 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
           <span className="text-4xl font-extrabold text-white mb-1">50+</span>
           <span className="text-gray-300 text-lg">Campaigns</span>
         </div>
-      </div>
+      </motion.div>
       {/* Section Heading and Description */}
-      <div className="w-full flex flex-col items-center justify-center text-center mb-10 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.6, ease: 'easeOut' }}
+        className="w-full flex flex-col items-center justify-center text-center mb-10 px-4"
+      >
         <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Everything You Need to Succeed in the Digital World</h2>
         <p className="text-base md:text-lg text-gray-300 max-w-2xl">At DLS Group, our mission is to help brands of every size go viral. Our platform equips you with powerful tools to launch impactful content campaigns that connect, engage, and drive real, measurable results.</p>
-      </div>
+      </motion.div>
       {/* Tabs for Creators and Brands with image on left */}
-      <div ref={aboutRef} className="w-full flex justify-center pb-16">
+      <motion.div
+        ref={aboutRef}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.8, ease: 'easeOut' }}
+        className="w-full flex justify-center pb-16"
+      >
         <div className="w-full max-w-[1400px] px-4 flex flex-col md:flex-row items-center gap-10">
           {/* Left: Image */}
           <div className="flex-[1.1] flex justify-center items-center w-full mb-4 md:mb-0" style={{ minWidth: '0' }}>
@@ -182,9 +210,14 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
             <Tabs />
           </div>
         </div>
-      </div>
+      </motion.div>
       {/* Supported Platforms & Payment Methods Section */}
-      <div className="w-full flex flex-col items-center pb-16">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 1.0, ease: 'easeOut' }}
+        className="w-full flex flex-col items-center pb-16"
+      >
         <h2 className="text-3xl font-semibold text-white mb-10">We've got you covered</h2>
         <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center">
           {/* Supported Platforms */}
@@ -210,7 +243,7 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
             <span className="text-gray-400 mt-4">more coming soon...</span>
           </div>
         </div>
-      </div>
+      </motion.div>
       {/* Partner With Us Modal */}
       {showPartner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
