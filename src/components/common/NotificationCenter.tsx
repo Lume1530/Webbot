@@ -72,7 +72,7 @@ export const NotificationCenter: React.FC = () => {
           className={
             `z-50 rounded-xl shadow-xl border border-gray-200 bg-white ` +
             `absolute mt-2 right-2 top-12 ` +
-            `w-80 sm:w-96 max-w-full ` +
+            `w-96 max-w-full ` +
             `p-4 text-base ` +
             `overflow-y-auto max-h-[60vh]`
           }

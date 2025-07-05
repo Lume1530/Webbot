@@ -952,18 +952,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 w-full sm:w-auto min-w-0">
                           <button
                             onClick={() => handleEditUserViews(user)}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-xs flex-1 min-w-0 min-w-[44px] w-[44px] h-[44px] p-0 sm:px-2 sm:py-1 sm:w-auto sm:h-auto sm:gap-1"
                             title="Edit Views"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-5 w-5" />
                             <span className="hidden sm:inline">Edit Views</span>
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1 text-xs flex-1 min-w-0"
+                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-xs flex-1 min-w-0 min-w-[44px] w-[44px] h-[44px] p-0 sm:px-2 sm:py-1 sm:w-auto sm:h-auto sm:gap-1"
                             title="Delete User"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-5 w-5" />
                             <span className="hidden sm:inline">Delete</span>
                           </button>
                         </div>
