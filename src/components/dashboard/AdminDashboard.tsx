@@ -229,24 +229,15 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     setForceUpdateLoading(true);
     setSelectedCampaignForUpdate(campaign);
     try {
-      // Find all reels in the selected campaign (ignore active status)
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/reels', {
+      // Call the new backend endpoint to force update all reels in the campaign
+      await fetch(`/api/admin/campaigns/${campaign.id}/force-update`, {
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const allReels = await res.json();
-      const campaignReels = allReels.filter((r: any) => r.campaign_id === campaign.id);
-      // For each reel, update stats from RapidAPI
-      for (const reel of campaignReels) {
-        await fetch(`/api/admin/reels/${reel.id}/force-update`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      }
       setShowForceUpdateModal(false);
       setSelectedCampaignForUpdate(null);
-      loadData();
-      alert(`Force updated ${campaignReels.length} reels in campaign: ${campaign.name}`);
+      alert('Force update started. You will be notified when the process is complete.');
     } catch (error) {
       alert('Failed to force update campaign reels');
     } finally {
@@ -400,11 +391,13 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       return;
     }
 
-    const amount = parseInt(viewEditAmount);
-    if (amount <= 0) {
-      alert('Please enter a positive number');
+    let amount = parseInt(viewEditAmount);
+    if (isNaN(amount) || amount === 0) {
+      alert('Please enter a non-zero number');
       return;
     }
+    if (viewEditAction === 'remove') amount = -Math.abs(amount);
+    else amount = Math.abs(amount);
 
     try {
       const token = authService.getToken();

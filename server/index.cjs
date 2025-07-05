@@ -1777,3 +1777,40 @@ app.post('/api/send-support-mail', async (req, res) => {
     res.status(500).json({ error: 'Failed to send support mail.' });
   }
 });
+
+// Admin: Force update all reels in a campaign
+app.post('/api/admin/campaigns/:id/force-update', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const adminId = req.user.id;
+    const adminUsername = req.user.username;
+    // Find all reels for this campaign
+    const reelsResult = await pool.query('SELECT * FROM reels WHERE campaign_id = $1', [campaignId]);
+    const reels = reelsResult.rows;
+    let updated = 0;
+    let errors = [];
+    for (const reel of reels) {
+      try {
+        // TODO: Replace this with actual RapidAPI fetch logic
+        // Simulate fetchInstagramStatsWithRapidAPI
+        const stats = await fetchInstagramStatsWithRapidAPI({ url: reel.url, userId: reel.userid });
+        await pool.query(
+          'UPDATE reels SET views = $1, likes = $2, comments = $3, lastUpdated = NOW() WHERE id = $4',
+          [stats.views, stats.likes, stats.comments, reel.id]
+        );
+        updated++;
+      } catch (err) {
+        errors.push({ reelId: reel.id, error: err.message || err.toString() });
+      }
+    }
+    // Notify the admin
+    await pool.query(
+      'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
+      [adminId, `Force update for campaign ${campaignId} complete. Updated ${updated} reels.`, 'force_update_done']
+    );
+    res.json({ message: `Force update complete. Updated ${updated} reels.`, errors });
+  } catch (error) {
+    console.error('Force update campaign error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
