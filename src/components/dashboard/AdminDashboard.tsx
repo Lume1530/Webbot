@@ -23,7 +23,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const [selectedReels, setSelectedReels] = useState<string[]>([]);
   const [campaignForm, setCampaignForm] = useState({
-    name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active'
+    name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active', min_post_date: ''
   });
   const [stats, setStats] = useState({ totalReels: 0, totalViews: 0, totalPayout: '0.00', activeReels: 0 });
   const [showViewEditModal, setShowViewEditModal] = useState(false);
@@ -253,7 +253,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       body: JSON.stringify({ ...campaignForm, platform: campaignForm.platform.join(','), status: campaignForm.status })
     });
     setShowCampaignForm(false);
-    setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active' });
+    setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active', min_post_date: '' });
     loadCampaigns();
   };
 
@@ -266,7 +266,8 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       description: campaign.description || '',
       requirements: campaign.requirements || '',
       platform: campaign.platform ? campaign.platform.split(',') : ['instagram'],
-      status: campaign.status
+      status: campaign.status,
+      min_post_date: campaign.min_post_date || ''
     });
   };
 
@@ -283,7 +284,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       
       if (response.ok) {
         setEditingCampaign(null);
-        setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active' });
+        setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active', min_post_date: '' });
         loadCampaigns();
       } else {
         alert('Failed to update campaign');
@@ -1390,6 +1391,17 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         ))}
                       </select>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Post Date (Optional)</label>
+                      <input 
+                        type="date" 
+                        value={campaignForm.min_post_date} 
+                        onChange={e => setCampaignForm(f => ({...f, min_post_date: e.target.value}))} 
+                        placeholder="Leave empty to allow all dates"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors" 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Only reels posted on or after this date will be accepted</p>
+                    </div>
                   </div>
                   <div className="space-y-4 flex flex-col justify-between">
                     <div>
@@ -1424,7 +1436,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         onClick={() => {
                       setShowCampaignForm(false);
                       setEditingCampaign(null);
-                      setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active' });
+                      setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active', min_post_date: '' });
                         }} 
                         className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all duration-200"
                       >
