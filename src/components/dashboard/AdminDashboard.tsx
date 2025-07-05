@@ -481,19 +481,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
           <div className="flex flex-row justify-between items-start sm:items-center py-6 gap-4 md:gap-0">
             {/* Left: Heading and tagline */}
             <div className="flex flex-col flex-1">
-              <div className="flex flex-row items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                  <p className="text-gray-600">Manage users, reels, and tracking</p>
-                </div>
-                {/* Notification button always on right of tagline on mobile and desktop */}
-                <div className="ml-2">
-                  <NotificationCenter />
-                </div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage users, reels, and tracking</p>
+              {/* Notification button below tagline on mobile only */}
+              <div className="flex sm:hidden mt-2">
+                <NotificationCenter />
               </div>
             </div>
-            {/* Right: Force Update and Logout (row on desktop, below on mobile) */}
+            {/* Right: Notification (desktop), Force Update, Logout */}
             <div className="hidden sm:flex flex-row items-center space-x-2 sm:space-x-4 ml-auto">
+              <div className="relative">
+                <NotificationCenter />
+              </div>
               <button
                 onClick={handleForceUpdate}
                 disabled={isUpdating}
