@@ -629,8 +629,9 @@ app.post('/api/admin/users/:id/views', authenticateToken, requireAdmin, async (r
     
     console.log('Views endpoint called with:', { userId, action, amount, adminUsername });
     
-    if (!action || !amount || (action !== 'add' && action !== 'remove') || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid action or amount' });
+    // Only allow integer values (positive, zero, or negative)
+    if (amount === undefined || isNaN(amount) || !Number.isInteger(Number(amount))) {
+      return res.status(400).json({ error: 'Amount must be an integer' });
     }
     
     // Get user info
@@ -643,31 +644,17 @@ app.post('/api/admin/users/:id/views', authenticateToken, requireAdmin, async (r
     
     // Check if user already has a dummy reel for admin view adjustments
     const dummyReelResult = await pool.query(
-      'SELECT id, views FROM reels WHERE userid = $1 AND is_dummy = true AND shortcode = $2',
+      'SELECT id FROM reels WHERE userid = $1 AND is_dummy = true AND shortcode = $2',
       [userId, 'DUMMY-ADMIN-VIEWS']
     );
     
     let dummyReelId;
-    let currentDummyViews = 0;
-    
     if (dummyReelResult.rows.length > 0) {
-      // Update existing dummy reel
+      // Update existing dummy reel: set views to the provided amount
       dummyReelId = dummyReelResult.rows[0].id;
-      currentDummyViews = dummyReelResult.rows[0].views || 0;
-      
-      let newViews = currentDummyViews;
-      if (action === 'add') {
-        newViews += amount;
-      } else {
-        newViews -= amount; // allow negative values
-      }
-      
-      await pool.query('UPDATE reels SET views = $1 WHERE id = $2', [newViews, dummyReelId]);
-      
+      await pool.query('UPDATE reels SET views = $1 WHERE id = $2', [amount, dummyReelId]);
     } else {
-      // Create new dummy reel
-      const viewsToAdd = action === 'add' ? amount : 0; // If removing and no dummy reel exists, start at 0
-      
+      // Create new dummy reel with the provided amount
       const createResult = await pool.query(`
         INSERT INTO reels (userid, url, shortcode, username, views, likes, comments, thumbnail, submitted_at, lastUpdated, isActive, is_dummy)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW(), false, true)
@@ -677,21 +664,19 @@ app.post('/api/admin/users/:id/views', authenticateToken, requireAdmin, async (r
         'https://dummy-url-for-admin-views.com',
         'DUMMY-ADMIN-VIEWS',
         user.username,
-        viewsToAdd,
+        amount,
         0,
         0,
         'https://dummy-thumbnail.com'
       ]);
-      
       dummyReelId = createResult.rows[0].id;
     }
     
     // Log the action for admin reference
-    console.log(`Admin ${adminUsername} ${action}ed ${amount} views to user ${user.username} (ID: ${userId}) via dummy reel`);
+    console.log(`Admin ${adminUsername} set dummy reel views to ${amount} for user ${user.username} (ID: ${userId})`);
     
     res.json({ 
-      message: `Successfully ${action}ed ${amount} views to user ${user.username}`,
-      action,
+      message: `Successfully set dummy reel views to ${amount} for user ${user.username}`,
       amount,
       dummyReelId
     });

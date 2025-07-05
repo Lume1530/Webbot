@@ -33,6 +33,9 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const [instagramAccounts, setInstagramAccounts] = useState<any[]>([]);
   const [instagramStats, setInstagramStats] = useState({ totalAccounts: 0, activeAccounts: 0, connectedUsers: 0 });
   const [pendingInstagramAccounts, setPendingInstagramAccounts] = useState<any[]>([]);
+  const [showForceUpdateModal, setShowForceUpdateModal] = useState(false);
+  const [forceUpdateLoading, setForceUpdateLoading] = useState(false);
+  const [selectedCampaignForUpdate, setSelectedCampaignForUpdate] = useState<any>(null);
 
   // Add status options
   const CAMPAIGN_STATUS_OPTIONS = [
@@ -219,12 +222,35 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   };
 
   const handleForceUpdate = async () => {
-    setIsUpdating(true);
+    setShowForceUpdateModal(true);
+  };
+
+  const handleCampaignForceUpdate = async (campaign: any) => {
+    setForceUpdateLoading(true);
+    setSelectedCampaignForUpdate(campaign);
     try {
-      await trackingService.forceUpdateAll();
+      // Find all reels in the selected campaign (ignore active status)
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/reels', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const allReels = await res.json();
+      const campaignReels = allReels.filter((r: any) => r.campaign_id === campaign.id);
+      // For each reel, update stats from RapidAPI
+      for (const reel of campaignReels) {
+        await fetch(`/api/admin/reels/${reel.id}/force-update`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+      setShowForceUpdateModal(false);
+      setSelectedCampaignForUpdate(null);
       loadData();
+      alert(`Force updated ${campaignReels.length} reels in campaign: ${campaign.name}`);
+    } catch (error) {
+      alert('Failed to force update campaign reels');
     } finally {
-      setIsUpdating(false);
+      setForceUpdateLoading(false);
     }
   };
 
@@ -1586,6 +1612,51 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 </button>
                 <button
                   onClick={() => setShowViewEditModal(false)}
+                  className="flex-1 py-3 px-4 rounded-lg font-semibold bg-gray-300 hover:bg-gray-400 text-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Force Update Modal */}
+        {showForceUpdateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Select Campaign to Force Update</h3>
+                <button
+                  onClick={() => setShowForceUpdateModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-4">
+                <p className="text-gray-600">Choose a campaign to update all its reels' stats.</p>
+              </div>
+              <div className="space-y-2">
+                {campaigns.map((c: any) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleCampaignForceUpdate(c)}
+                    className="w-full py-2 px-4 rounded-lg border-2 border-blue-500 text-blue-700 font-semibold hover:bg-blue-50 transition-colors disabled:opacity-50"
+                    disabled={forceUpdateLoading && selectedCampaignForUpdate?.id === c.id}
+                  >
+                    {c.name}
+                    {forceUpdateLoading && selectedCampaignForUpdate?.id === c.id && (
+                      <span className="ml-2 animate-spin">⏳</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => setShowForceUpdateModal(false)}
                   className="flex-1 py-3 px-4 rounded-lg font-semibold bg-gray-300 hover:bg-gray-400 text-gray-700 transition-colors"
                 >
                   Cancel
