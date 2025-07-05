@@ -282,12 +282,12 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
           <span className="text-gray-300 text-base font-semibold tracking-wide">&copy; DLS GROUP | All rights reserved</span>
         </div>
         <div className="flex items-center gap-4 justify-center">
-          <a href="https://t.me/yourtelegram" target="_blank" rel="noopener noreferrer" className="group">
+          <a href="https://t.me/+TDBG7LH2nAdkMDY1" target="_blank" rel="noopener noreferrer" className="group">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Send className="h-5 w-5" />
             </span>
           </a>
-          <a href="https://instagram.com/yourinstagram" target="_blank" rel="noopener noreferrer" className="group">
+          <a href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" target="_blank" rel="noopener noreferrer" className="group">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-pink-400 to-yellow-400 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Instagram className="h-5 w-5" />
             </span>
@@ -498,12 +498,12 @@ function App() {
           <span className="text-gray-300 text-base font-semibold tracking-wide">&copy; DLS GROUP | All rights reserved</span>
         </div>
         <div className="flex items-center gap-4 justify-center">
-          <a href="https://t.me/yourtelegram" target="_blank" rel="noopener noreferrer" className="group">
+          <a href="https://t.me/+TDBG7LH2nAdkMDY1" target="_blank" rel="noopener noreferrer" className="group">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Send className="h-5 w-5" />
             </span>
           </a>
-          <a href="https://instagram.com/yourinstagram" target="_blank" rel="noopener noreferrer" className="group">
+          <a href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" target="_blank" rel="noopener noreferrer" className="group">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-pink-400 to-yellow-400 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Instagram className="h-5 w-5" />
             </span>

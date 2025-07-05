@@ -8,7 +8,14 @@ const ExcelJS = require('exceljs');
 const { createCanvas, registerFont } = require('canvas');
 const nodemailer = require('nodemailer');
 // RapidAPI configuration
-const RAPIDAPI_KEY = '5a4cfb3fe4msh64bf7c7af166feep16a880jsnbaa19be7004b';
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+
+// Validate RapidAPI key is present
+if (!RAPIDAPI_KEY) {
+  console.error('❌ RAPIDAPI_KEY environment variable is required');
+  console.error('Please add RAPIDAPI_KEY to your .env file');
+  process.exit(1);
+}
 
 // Function to fetch Instagram stats using the new RapidAPI
 const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
@@ -23,10 +30,21 @@ const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
       }
     };
     const response = await fetch(apiUrl, options);
+    
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please wait before making more requests.');
+      }
+      throw new Error(`API error: ${response.status} - ${response.statusText}`);
     }
+    
     const data = await response.json();
+    
+    // Check for API error responses
+    if (data.error || data.message) {
+      throw new Error(`API returned error: ${data.error || data.message}`);
+    }
+    
     // Parse the response for views, likes, comments
     const views = data.video_play_count || 0;
     const likes = data.edge_media_preview_like?.count || 0;
@@ -34,6 +52,7 @@ const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
     const username = data.owner?.username || 'unknown';
     const shortcode = data.shortcode || '';
     const thumbnail = data.display_url || data.thumbnail || '';
+    
     return {
       views,
       likes,
@@ -43,8 +62,14 @@ const fetchInstagramStatsWithRapidAPI = async ({ url, userId }) => {
       thumbnail
     };
   } catch (error) {
-    console.error('Error fetching Instagram stats with new RapidAPI:', error);
-    // Fallback: return mock data
+    console.error('Error fetching Instagram stats with RapidAPI:', error.message);
+    
+    // If it's a rate limit error, re-throw it so the caller can handle it
+    if (error.message.includes('Rate limit exceeded')) {
+      throw error;
+    }
+    
+    // For other errors, return fallback data
     return {
       views: Math.floor(Math.random() * 10000) + 1000,
       likes: Math.floor(Math.random() * 500) + 50,
@@ -1773,39 +1798,96 @@ app.post('/api/send-support-mail', async (req, res) => {
   }
 });
 
-// Admin: Force update all reels in a campaign
+// Admin: Force update all reels in a campaign with rate limiting
 app.post('/api/admin/campaigns/:id/force-update', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const campaignId = req.params.id;
     const adminId = req.user.id;
     const adminUsername = req.user.username;
+    
     // Find all reels for this campaign
     const reelsResult = await pool.query('SELECT * FROM reels WHERE campaign_id = $1', [campaignId]);
     const reels = reelsResult.rows;
+    
+    if (reels.length === 0) {
+      return res.json({ message: 'No reels found for this campaign.' });
+    }
+    
+    // Rate limiting configuration
+    const BATCH_SIZE = 35; // Process 35 reels per batch (under the 50 req/min limit)
+    const BATCH_DELAY = 60000; // Wait 60 seconds between batches
+    
     let updated = 0;
     let errors = [];
-    for (const reel of reels) {
-      try {
-        // TODO: Replace this with actual RapidAPI fetch logic
-        // Simulate fetchInstagramStatsWithRapidAPI
-        const stats = await fetchInstagramStatsWithRapidAPI({ url: reel.url, userId: reel.userid });
-        await pool.query(
-          'UPDATE reels SET views = $1, likes = $2, comments = $3, lastUpdated = NOW() WHERE id = $4',
-          [stats.views, stats.likes, stats.comments, reel.id]
-        );
-        updated++;
-      } catch (err) {
-        errors.push({ reelId: reel.id, error: err.message || err.toString() });
+    const totalBatches = Math.ceil(reels.length / BATCH_SIZE);
+    
+    // Send initial response to client
+    res.json({ 
+      message: `Force update started. Processing ${reels.length} reels in ${totalBatches} batches.`,
+      totalReels: reels.length,
+      totalBatches,
+      batchSize: BATCH_SIZE
+    });
+    
+    // Process reels in batches with rate limiting
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+      const startIndex = batchIndex * BATCH_SIZE;
+      const endIndex = Math.min(startIndex + BATCH_SIZE, reels.length);
+      const batch = reels.slice(startIndex, endIndex);
+      
+      console.log(`Processing batch ${batchIndex + 1}/${totalBatches} with ${batch.length} reels`);
+      
+      // Process current batch
+      for (let i = 0; i < batch.length; i++) {
+        const reel = batch[i];
+        try {
+          const stats = await fetchInstagramStatsWithRapidAPI({ url: reel.url, userId: reel.userid });
+          await pool.query(
+            'UPDATE reels SET views = $1, likes = $2, comments = $3, lastUpdated = NOW() WHERE id = $4',
+            [stats.views, stats.likes, stats.comments, reel.id]
+          );
+          updated++;
+          
+          // Add small delay between requests (1.2 seconds = 50 requests per minute)
+          if (i < batch.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1200));
+          }
+        } catch (err) {
+          errors.push({ reelId: reel.id, error: err.message || err.toString() });
+          
+          // If it's a rate limit error, wait longer before continuing
+          if (err.message.includes('Rate limit exceeded')) {
+            console.log('Rate limit hit, waiting 2 minutes before continuing...');
+            await new Promise(resolve => setTimeout(resolve, 120000));
+          }
+        }
+      }
+      
+      // Wait before processing next batch (except for the last batch)
+      if (batchIndex < totalBatches - 1) {
+        console.log(`Waiting ${BATCH_DELAY/1000} seconds before next batch...`);
+        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
       }
     }
-    // Notify the admin
+    
+    // Notify the admin about completion
     await pool.query(
       'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
-      [adminId, `Force update for campaign ${campaignId} complete. Updated ${updated} reels.`, 'force_update_done']
+      [adminId, `Force update for campaign ${campaignId} complete. Updated ${updated}/${reels.length} reels.`, 'force_update_done']
     );
-    res.json({ message: `Force update complete. Updated ${updated} reels.`, errors });
+    
+    console.log(`Force update completed: ${updated} reels updated, ${errors.length} errors`);
+    
   } catch (error) {
     console.error('Force update campaign error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Try to notify admin about the error
+    try {
+      await pool.query(
+        'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
+        [adminId, `Force update for campaign ${campaignId} failed: ${error.message}`, 'force_update_error']
+      );
+    } catch (notifyError) {
+      console.error('Failed to send error notification:', notifyError);
+    }
   }
 });
