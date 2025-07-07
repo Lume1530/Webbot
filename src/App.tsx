@@ -158,12 +158,16 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        src="/Dls_grouplogo.png" 
+        src="/Dls_grouplogo.webp" 
         alt="DLS Group Logo" 
         className="h-16 md:h-28 w-auto absolute top-4 md:top-8 left-4 md:left-8 z-10 drop-shadow-2xl"
         style={{
           maxHeight: '110px',
           filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.3))'
+        }}
+        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+          // Fallback to original PNG if WebP fails
+          e.currentTarget.src = '/Dls_grouplogo.png';
         }}
       />
 
@@ -247,12 +251,16 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
             <motion.img 
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
-              src="/dls_website_hero.png" 
+              src="/dls_website_hero.webp" 
               alt="Creators" 
               className="rounded-2xl shadow-2xl w-full max-w-2xl h-72 md:h-[520px] object-contain object-center" 
               style={{
                 maxHeight: '520px',
                 filter: 'drop-shadow(0 20px 40px rgba(168, 85, 247, 0.2))'
+              }}
+              onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                // Fallback to original PNG if WebP fails
+                e.currentTarget.src = '/dls_website_hero.png';
               }}
             />
           </motion.div>
@@ -281,17 +289,25 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
               '/Client_logo/client logo 4.png',
               '/Client_logo/client logo 5.png',
               '/Client_logo/client logo 6.png',
-            ].map((src, i) => (
-              <motion.img
-                key={src + i}
-                whileHover={{ scale: 1.1, filter: 'brightness(1.2)' }}
-                transition={{ duration: 0.2 }}
-                src={src}
-                alt={`Client Logo ${i%6+1}`}
-                className="h-16 w-28 sm:h-28 sm:w-44 object-contain mx-2 sm:mx-4 transition-all duration-300"
-                style={{ background: 'none' }}
-              />
-            ))}
+            ].map((src, i) => {
+              // Convert to compressed WebP path
+              const webpSrc = src.replace('.png', '.webp');
+              return (
+                <motion.img
+                  key={src + i}
+                  whileHover={{ scale: 1.1, filter: 'brightness(1.2)' }}
+                  transition={{ duration: 0.2 }}
+                  src={webpSrc}
+                  alt={`Client Logo ${i%6+1}`}
+                  className="h-16 w-28 sm:h-28 sm:w-44 object-contain mx-2 sm:mx-4 transition-all duration-300"
+                  style={{ background: 'none' }}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                    // Fallback to original PNG if WebP fails
+                    e.currentTarget.src = src;
+                  }}
+                />
+              );
+            })}
           </div>
           <style>{`
             @keyframes marquee {
@@ -393,11 +409,15 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
               className="w-full max-w-[340px] h-40 sm:max-w-[400px] sm:h-56 md:max-w-[600px] md:h-[600px] lg:max-w-[700px] lg:h-[700px] flex items-center justify-center"
             >
               <img 
-                src="/website_image.png" 
+                src="/website_image.webp" 
                 alt="Creators and Brands" 
                 className="w-full h-full object-contain rounded-2xl shadow-2xl" 
                 style={{
                   filter: 'drop-shadow(0 20px 40px rgba(168, 85, 247, 0.2))'
+                }}
+                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                  // Fallback to original PNG if WebP fails
+                  e.currentTarget.src = '/website_image.png';
                 }}
               />
             </motion.div>
