@@ -555,27 +555,28 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="border-b border-gray-200">
-            <nav className="flex justify-between px-2 sm:px-6">
+            <nav className="flex justify-between px-1 sm:px-6 overflow-x-auto">
               {[
-                { id: 'overview', label: 'Overview', icon: TrendingUp }, 
-                { id: 'accounts', label: 'Account Approvals', icon: Clock }, 
-                { id: 'reels', label: 'Reels', icon: Eye }, 
-                { id: 'campaigns', label: 'Campaigns', icon: Megaphone },
-                { id: 'instagram', label: 'Instagram Accounts', icon: Users }
-              ].map(({ id, label, icon: Icon }) => (
+                { id: 'overview', label: 'Overview', mobileLabel: 'Overview', icon: TrendingUp }, 
+                { id: 'accounts', label: 'Account Approvals', mobileLabel: 'Users', icon: Clock }, 
+                { id: 'reels', label: 'Reels', mobileLabel: 'Reels', icon: Eye }, 
+                { id: 'campaigns', label: 'Campaigns', mobileLabel: 'Campaigns', icon: Megaphone },
+                { id: 'instagram', label: 'Instagram Accounts', mobileLabel: 'Instagram', icon: Users }
+              ].map(({ id, label, mobileLabel, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id as any)}
-                  className={`flex-1 py-4 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors min-w-0 text-center ${
+                  className={`flex-shrink-0 py-3 sm:py-4 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors min-w-0 text-center ${
                     activeTab === id
                       ? 'border-blue-500 text-blue-600 bg-blue-50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                   style={{ minWidth: 0 }}
                 >
-                  <div className="flex flex-col items-center gap-1">
-                    <Icon className="h-4 w-4 mx-auto" />
-                    <span>{label}</span>
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto" />
+                    <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{mobileLabel}</span>
                   </div>
                 </button>
               ))}

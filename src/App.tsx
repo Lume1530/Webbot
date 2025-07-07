@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LoginForm, AdminDashboard, StaffDashboard, UserDashboard } from './components';
 import { authService } from './services/authService';
 import { LogOut, Instagram, Send, Megaphone, Users, User, Briefcase, Youtube, X as XIcon, Bitcoin, IndianRupee, Mail, Menu as MenuIcon, X as CloseIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper for smooth scroll
 function scrollToRef(ref: React.RefObject<HTMLElement>) {
@@ -64,61 +64,207 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] flex flex-col relative">
+    <div className="min-h-screen bg-[#09090B] flex flex-col relative overflow-hidden">
+      {/* Animated Background Gradients */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Primary gradient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Floating particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 0.8, 0.3],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Top Right Menu */}
       <nav className="fixed top-6 right-6 z-30">
         {/* Desktop menu */}
         <div className="hidden md:flex items-center gap-6">
-          <button onClick={() => handleMenu('stats')} className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition">Stats</button>
-          <button onClick={() => handleMenu('about')} className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition">About Us</button>
-          <button onClick={() => handleMenu('dashboard')} className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition">User Dashboard</button>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleMenu('stats')} 
+            className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition-colors duration-300"
+          >
+            Stats
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleMenu('about')} 
+            className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition-colors duration-300"
+          >
+            About Us
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleMenu('dashboard')} 
+            className="text-white text-base md:text-lg font-semibold hover:text-pink-400 transition-colors duration-300"
+          >
+            User Dashboard
+          </motion.button>
         </div>
         {/* Mobile menu icon */}
         <div className="md:hidden flex items-center">
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400">
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setMenuOpen(!menuOpen)} 
+            className="text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400"
+          >
             {menuOpen ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
-          </button>
+          </motion.button>
         </div>
         {/* Mobile menu dropdown */}
-        {menuOpen && (
-          <div className="absolute right-0 mt-3 w-48 bg-[#171718] rounded-xl shadow-xl py-4 flex flex-col gap-2 border border-[#232325] animate-fadeIn">
-            <button onClick={() => handleMenu('stats')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">Stats</button>
-            <button onClick={() => handleMenu('about')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">About Us</button>
-            <button onClick={() => handleMenu('dashboard')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">User Dashboard</button>
-          </div>
-        )}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute right-0 mt-3 w-48 bg-[#171718]/95 backdrop-blur-sm rounded-xl shadow-xl py-4 flex flex-col gap-2 border border-[#232325]"
+            >
+              <button onClick={() => handleMenu('stats')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">Stats</button>
+              <button onClick={() => handleMenu('about')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">About Us</button>
+              <button onClick={() => handleMenu('dashboard')} className="text-white text-base font-semibold hover:text-pink-400 transition px-6 py-2 text-left">User Dashboard</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
-      {/* Logo at top left - bigger and more prominent */}
-      <img src="/Dls_grouplogo.png" alt="DLS Group Logo" className="h-16 md:h-28 w-auto absolute top-4 md:top-8 left-4 md:left-8 z-10 drop-shadow-xl" style={{maxHeight: '110px'}} />
-      {/* Hero Section - centered container with animation */}
+
+      {/* Logo at top left - bigger and more prominent with glow */}
+      <motion.img 
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        src="/Dls_grouplogo.png" 
+        alt="DLS Group Logo" 
+        className="h-16 md:h-28 w-auto absolute top-4 md:top-8 left-4 md:left-8 z-10 drop-shadow-2xl"
+        style={{
+          maxHeight: '110px',
+          filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.3))'
+        }}
+      />
+
+      {/* Hero Section - centered container with enhanced animation */}
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="w-full flex justify-center"
+        transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="w-full flex justify-center relative z-10"
       >
         <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between py-10 px-4 md:px-12 gap-8 md:gap-0">
           {/* Left: Tagline and Buttons */}
-          <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left mt-20 md:mt-0">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white tracking-tight">CREATE. CLIP.<br className="md:hidden"/> CASH OUT.</h1>
-            <p className="text-lg md:text-2xl mb-8 max-w-xl font-medium text-gray-300">Create videos from content and earn money</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start mb-4">
-              <button onClick={onShowLogin} className="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:from-purple-700 hover:to-pink-600 transition-all text-lg">Join Now</button>
-              <button onClick={() => setShowPartner(true)} className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:from-yellow-500 hover:to-orange-600 transition-all text-lg">Partner With Us</button>
-            </div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex-1 flex flex-col items-center md:items-start text-center md:text-left mt-20 md:mt-0"
+          >
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-4xl md:text-5xl font-extrabold mb-4 text-white tracking-tight"
+              style={{
+                background: 'linear-gradient(135deg, #fff 0%, #f3e8ff 50%, #e9d5ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 30px rgba(168, 85, 247, 0.5))'
+              }}
+            >
+              CREATE. CLIP.<br className="md:hidden"/> CASH OUT.
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              className="text-lg md:text-2xl mb-8 max-w-xl font-medium text-gray-300"
+            >
+              Create videos from content and earn money
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.0 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start mb-4"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onShowLogin} 
+                className="bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:from-purple-700 hover:to-pink-600 transition-all text-lg relative overflow-hidden group"
+                style={{
+                  boxShadow: '0 10px 30px rgba(168, 85, 247, 0.3)',
+                }}
+              >
+                <span className="relative z-10">Join Now</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(245, 158, 11, 0.3)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowPartner(true)} 
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:from-yellow-500 hover:to-orange-600 transition-all text-lg relative overflow-hidden group"
+                style={{
+                  boxShadow: '0 10px 30px rgba(245, 158, 11, 0.3)',
+                }}
+              >
+                <span className="relative z-10">Partner With Us</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
           {/* Right: Hero Image */}
-          <div className="flex-1 flex justify-center items-center w-full">
-            <img src="/dls_website_hero.png" alt="Creators" className="rounded-2xl shadow-xl w-full max-w-2xl h-72 md:h-[520px] object-contain object-center" style={{maxHeight: '520px'}} />
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, x: 50, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="flex-1 flex justify-center items-center w-full"
+          >
+            <motion.img 
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+              src="/dls_website_hero.png" 
+              alt="Creators" 
+              className="rounded-2xl shadow-2xl w-full max-w-2xl h-72 md:h-[520px] object-contain object-center" 
+              style={{
+                maxHeight: '520px',
+                filter: 'drop-shadow(0 20px 40px rgba(168, 85, 247, 0.2))'
+              }}
+            />
+          </motion.div>
         </div>
       </motion.div>
+
       {/* Client Logos Row - 6 real logos, spaced inside container, no background */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
-        className="w-full flex justify-center bg-[#09090B] border-y border-[#1a1a1a] mb-8 overflow-hidden"
+        transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
+        className="w-full flex justify-center bg-[#09090B]/50 backdrop-blur-sm border-y border-[#1a1a1a] mb-8 overflow-hidden relative z-10"
       >
         <div className="w-full max-w-6xl px-2 sm:px-4 relative overflow-hidden">
           <div className="flex gap-6 sm:gap-10 py-2 whitespace-nowrap animate-marquee" style={{animation: 'marquee 18s linear infinite'}}>
@@ -136,11 +282,13 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
               '/Client_logo/client logo 5.png',
               '/Client_logo/client logo 6.png',
             ].map((src, i) => (
-              <img
+              <motion.img
                 key={src + i}
+                whileHover={{ scale: 1.1, filter: 'brightness(1.2)' }}
+                transition={{ duration: 0.2 }}
                 src={src}
                 alt={`Client Logo ${i%6+1}`}
-                className="h-16 w-28 sm:h-28 sm:w-44 object-contain mx-2 sm:mx-4"
+                className="h-16 w-28 sm:h-28 sm:w-44 object-contain mx-2 sm:mx-4 transition-all duration-300"
                 style={{ background: 'none' }}
               />
             ))}
@@ -155,148 +303,296 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
           `}</style>
         </div>
       </motion.div>
+
       {/* Stats Section */}
       <motion.div
         ref={statsRef}
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.4, ease: 'easeOut' }}
-        className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-6 pb-16 px-4"
+        transition={{ duration: 0.8, delay: 1.4, ease: 'easeOut' }}
+        className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-6 pb-16 px-4 relative z-10"
       >
-        <div className="bg-[#181014] rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a]">
-          <span className="text-4xl font-extrabold text-white mb-1">$127.2K+</span>
-          <span className="text-gray-300 text-lg">Paid to creators</span>
-        </div>
-        <div className="bg-[#181014] rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a]">
-          <span className="text-4xl font-extrabold text-white mb-1">1,000+</span>
-          <span className="text-gray-300 text-lg">Active clippers</span>
-        </div>
-        <div className="bg-[#181014] rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a]">
-          <span className="text-4xl font-extrabold text-white mb-1">2B+</span>
-          <span className="text-gray-300 text-lg">Monthly Views</span>
-        </div>
-        <div className="bg-[#181014] rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a]">
-          <span className="text-4xl font-extrabold text-white mb-1">50+</span>
-          <span className="text-gray-300 text-lg">Campaigns</span>
-        </div>
+        {[
+          { value: '$127.2K+', label: 'Paid to creators', color: 'from-purple-600/20 to-pink-600/20' },
+          { value: '1,000+', label: 'Active clippers', color: 'from-blue-600/20 to-cyan-600/20' },
+          { value: '2B+', label: 'Monthly Views', color: 'from-green-600/20 to-emerald-600/20' },
+          { value: '50+', label: 'Campaigns', color: 'from-yellow-600/20 to-orange-600/20' }
+        ].map((stat, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, delay: 1.6 + index * 0.1 }}
+            whileHover={{ 
+              scale: 1.05, 
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+              y: -5
+            }}
+            className={`bg-[#181014]/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 flex flex-col items-center gap-2 border border-[#2a1a1a] relative overflow-hidden group`}
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+            <span className="text-4xl font-extrabold text-white mb-1 relative z-10 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all duration-300">
+              {stat.value}
+            </span>
+            <span className="text-gray-300 text-lg relative z-10">{stat.label}</span>
+          </motion.div>
+        ))}
       </motion.div>
+
       {/* Section Heading and Description */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.6, ease: 'easeOut' }}
-        className="w-full flex flex-col items-center justify-center text-center mb-10 px-4"
+        transition={{ duration: 0.8, delay: 2.0, ease: 'easeOut' }}
+        className="w-full flex flex-col items-center justify-center text-center mb-10 px-4 relative z-10"
       >
-        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Everything You Need to Succeed in the Digital World</h2>
-        <p className="text-base md:text-lg text-gray-300 max-w-2xl">At DLS Group, our mission is to help brands of every size go viral. Our platform equips you with powerful tools to launch impactful content campaigns that connect, engage, and drive real, measurable results.</p>
+        <motion.h2 
+          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 30 }}
+          transition={{ duration: 0.8 }}
+          className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+          style={{
+            background: 'linear-gradient(135deg, #fff 0%, #f3e8ff 50%, #e9d5ff 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          Everything You Need to Succeed in the Digital World
+        </motion.h2>
+        <motion.p 
+          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-base md:text-lg text-gray-300 max-w-2xl"
+        >
+          At DLS Group, our mission is to help brands of every size go viral. Our platform equips you with powerful tools to launch impactful content campaigns that connect, engage, and drive real, measurable results.
+        </motion.p>
       </motion.div>
+
       {/* Tabs for Creators and Brands with image on left */}
       <motion.div
         ref={aboutRef}
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.8, ease: 'easeOut' }}
-        className="w-full flex justify-center pb-16"
+        transition={{ duration: 0.8, delay: 2.2, ease: 'easeOut' }}
+        className="w-full flex justify-center pb-16 relative z-10"
       >
         <div className="w-full max-w-[1400px] px-4 flex flex-col md:flex-row items-center gap-10">
           {/* Left: Image */}
-          <div className="flex-[1.1] flex justify-center items-center w-full mb-4 md:mb-0" style={{ minWidth: '0' }}>
-            <div className="w-full max-w-[340px] h-40 sm:max-w-[400px] sm:h-56 md:max-w-[600px] md:h-[600px] lg:max-w-[700px] lg:h-[700px] flex items-center justify-center">
-              <img src="/website_image.png" alt="Creators and Brands" className="w-full h-full object-contain rounded-2xl shadow-2xl" />
-            </div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="flex-[1.1] flex justify-center items-center w-full mb-4 md:mb-0" 
+            style={{ minWidth: '0' }}
+          >
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-[340px] h-40 sm:max-w-[400px] sm:h-56 md:max-w-[600px] md:h-[600px] lg:max-w-[700px] lg:h-[700px] flex items-center justify-center"
+            >
+              <img 
+                src="/website_image.png" 
+                alt="Creators and Brands" 
+                className="w-full h-full object-contain rounded-2xl shadow-2xl" 
+                style={{
+                  filter: 'drop-shadow(0 20px 40px rgba(168, 85, 247, 0.2))'
+                }}
+              />
+            </motion.div>
+          </motion.div>
           {/* Right: Tabs */}
-          <div className="flex-[1.1] w-full max-w-[540px]">
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex-[1.1] w-full max-w-[540px]"
+          >
             <Tabs />
-          </div>
+          </motion.div>
         </div>
       </motion.div>
+
       {/* Supported Platforms & Payment Methods Section */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 1.0, ease: 'easeOut' }}
-        className="w-full flex flex-col items-center pb-16"
+        transition={{ duration: 0.8, delay: 2.4, ease: 'easeOut' }}
+        className="w-full flex flex-col items-center pb-16 relative z-10"
       >
-        <h2 className="text-3xl font-semibold text-white mb-10">We've got you covered</h2>
+        <motion.h2 
+          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 30 }}
+          transition={{ duration: 0.8 }}
+          className="text-3xl font-semibold text-white mb-10"
+        >
+          We've got you covered
+        </motion.h2>
         <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center">
           {/* Supported Platforms */}
-          <div className="flex-1 bg-[#181014] rounded-2xl border border-[#2a1a1a] p-8 flex flex-col items-center shadow-xl">
-            <span className="text-xl font-bold text-white mb-4">Supported Platforms:</span>
-            <div className="flex gap-8 text-4xl text-white mt-2">
+          <motion.div
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 bg-[#181014]/80 backdrop-blur-sm rounded-2xl border border-[#2a1a1a] p-8 flex flex-col items-center shadow-xl relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span className="text-xl font-bold text-white mb-4 relative z-10">Supported Platforms:</span>
+            <div className="flex gap-8 text-4xl text-white mt-2 relative z-10">
               {/* TikTok SVG */}
-              <svg width="32" height="32" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><g><path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/><path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/><path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/></g></svg>
-              <Instagram className="w-8 h-8" />
-              <Youtube className="w-8 h-8" />
-              <XIcon className="w-8 h-8" />
+              <motion.svg 
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                transition={{ duration: 0.2 }}
+                width="32" height="32" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"
+              >
+                <g>
+                  <path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/>
+                  <path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/>
+                  <path d="M204.8 77.6c-22.4 0-40.8-18.4-40.8-40.8V24h-36.8v144.8c0 13.6-11.2 24.8-24.8 24.8s-24.8-11.2-24.8-24.8 11.2-24.8 24.8-24.8c2.4 0 4.8 0.4 7.2 1.2V129.6c-2.4-0.4-4.8-0.4-7.2-0.4-34.4 0-62.4 28-62.4 62.4s28 62.4 62.4 62.4 62.4-28 62.4-62.4V104c12.8 8.8 28 14.4 44.8 14.4v-40.8z" fill="#fff"/>
+                </g>
+              </motion.svg>
+              <motion.div whileHover={{ scale: 1.2, rotate: 5 }} transition={{ duration: 0.2 }}>
+                <Instagram className="w-8 h-8" />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.2, rotate: 5 }} transition={{ duration: 0.2 }}>
+                <Youtube className="w-8 h-8" />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.2, rotate: 5 }} transition={{ duration: 0.2 }}>
+                <XIcon className="w-8 h-8" />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
           {/* Payment Methods */}
-          <div className="flex-1 bg-[#181014] rounded-2xl border border-[#2a1a1a] p-8 flex flex-col items-center shadow-xl">
-            <span className="text-xl font-bold text-white mb-4">Payment Methods:</span>
-            <div className="flex gap-8 text-4xl text-white mt-2">
+          <motion.div
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 bg-[#181014]/80 backdrop-blur-sm rounded-2xl border border-[#2a1a1a] p-8 flex flex-col items-center shadow-xl relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span className="text-xl font-bold text-white mb-4 relative z-10">Payment Methods:</span>
+            <div className="flex gap-8 text-4xl text-white mt-2 relative z-10">
               {/* PayPal SVG icon */}
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="20" fill="white"/><path d="M15.5 27L17.5 13.5H23.5C26.5 13.5 28.5 15.5 28.5 18.5C28.5 21.5 26.5 23.5 23.5 23.5H20.5L19.5 27H15.5Z" fill="#003087"/><path d="M17.5 13.5L15.5 27H19.5L20.5 23.5H23.5C26.5 23.5 28.5 21.5 28.5 18.5C28.5 15.5 26.5 13.5 23.5 13.5H17.5Z" fill="#3086C8"/><path d="M19.5 27L20.5 23.5H23.5C26.5 23.5 28.5 21.5 28.5 18.5C28.5 15.5 26.5 13.5 23.5 13.5H17.5L15.5 27H19.5Z" fill="#009CDE"/></svg>
-              <IndianRupee className="w-10 h-10" />
-              <Bitcoin className="w-10 h-10" />
+              <motion.svg 
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                transition={{ duration: 0.2 }}
+                width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect width="40" height="40" rx="20" fill="white"/>
+                <path d="M15.5 27L17.5 13.5H23.5C26.5 13.5 28.5 15.5 28.5 18.5C28.5 21.5 26.5 23.5 23.5 23.5H20.5L19.5 27H15.5Z" fill="#003087"/>
+                <path d="M17.5 13.5L15.5 27H19.5L20.5 23.5H23.5C26.5 23.5 28.5 21.5 28.5 18.5C28.5 15.5 26.5 13.5 23.5 13.5H17.5Z" fill="#3086C8"/>
+                <path d="M19.5 27L20.5 23.5H23.5C26.5 23.5 28.5 21.5 28.5 18.5C28.5 15.5 26.5 13.5 23.5 13.5H17.5L15.5 27H19.5Z" fill="#009CDE"/>
+              </motion.svg>
+              <motion.div whileHover={{ scale: 1.2, rotate: 5 }} transition={{ duration: 0.2 }}>
+                <IndianRupee className="w-10 h-10" />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.2, rotate: 5 }} transition={{ duration: 0.2 }}>
+                <Bitcoin className="w-10 h-10" />
+              </motion.div>
             </div>
-            <span className="text-gray-400 mt-4">more coming soon...</span>
-          </div>
+            <span className="text-gray-400 mt-4 relative z-10">more coming soon...</span>
+          </motion.div>
         </div>
       </motion.div>
+
       {/* Partner With Us Modal */}
-      {showPartner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md mx-4 relative">
-            <button onClick={() => setShowPartner(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            <h3 className="text-2xl font-bold text-orange-600 mb-4">Partner With Us</h3>
-            <form onSubmit={handlePartnerSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brand Name</label>
-                <input name="name" value={partnerForm.name} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input name="email" type="email" value={partnerForm.email} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                <input name="contact" value={partnerForm.contact} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                <textarea name="message" value={partnerForm.message} onChange={handlePartnerChange} required rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none" />
-              </div>
-              {error && <div className="text-red-600 text-sm">{error}</div>}
-              {sent && <div className="text-green-600 text-sm">Thank you! We received your message.</div>}
-              <button type="submit" disabled={sending} className="w-full bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50">
-                {sending ? 'Sending...' : 'Send'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showPartner && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4 relative"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowPartner(false)} 
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors"
+              >
+                &times;
+              </motion.button>
+              <h3 className="text-2xl font-bold text-orange-600 mb-4">Partner With Us</h3>
+              <form onSubmit={handlePartnerSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brand Name</label>
+                  <input name="name" value={partnerForm.name} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input name="email" type="email" value={partnerForm.email} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                  <input name="contact" value={partnerForm.contact} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea name="message" value={partnerForm.message} onChange={handlePartnerChange} required rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none transition-all" />
+                </div>
+                {error && <div className="text-red-600 text-sm">{error}</div>}
+                {sent && <div className="text-green-600 text-sm">Thank you! We received your message.</div>}
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit" 
+                  disabled={sending} 
+                  className="w-full bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
+                >
+                  {sending ? 'Sending...' : 'Send'}
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer (same as dashboard) */}
-      <footer className="w-full bg-[#171718] border-t border-[#232325] py-6 mt-8 flex flex-col items-center shadow-lg rounded-t-2xl">
+      <footer className="w-full bg-[#171718]/80 backdrop-blur-sm border-t border-[#232325] py-6 mt-8 flex flex-col items-center shadow-lg rounded-t-2xl relative z-10">
         <div className="flex items-center gap-4 justify-center mb-2">
           <span className="text-gray-300 text-base font-semibold tracking-wide">&copy; DLS GROUP | All rights reserved</span>
         </div>
         <div className="flex items-center gap-4 justify-center">
-          <a href="https://t.me/+TDBG7LH2nAdkMDY1" target="_blank" rel="noopener noreferrer" className="group">
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="https://t.me/+TDBG7LH2nAdkMDY1" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Send className="h-5 w-5" />
             </span>
-          </a>
-          <a href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" target="_blank" rel="noopener noreferrer" className="group">
+          </motion.a>
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-pink-400 to-yellow-400 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Instagram className="h-5 w-5" />
             </span>
-          </a>
-          <a href="mailto:support@dlsgroup.org.in" className="group">
+          </motion.a>
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="mailto:support@dlsgroup.org.in" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-gray-700 to-gray-900 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Mail className="h-5 w-5" />
             </span>
-          </a>
+          </motion.a>
         </div>
       </footer>
     </div>
@@ -419,12 +715,6 @@ function App() {
     setUser(null);
   };
 
-  const handleSessionExpired = () => {
-    // Session expired, redirect to login
-    setUser(null);
-    setShowLogin(true);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -434,42 +724,80 @@ function App() {
   }
 
   if (!user) {
-    if (showLogin) {
-      return (
-        <div className="min-h-screen bg-[#09090B] flex flex-col items-center justify-center relative">
-          <div className="w-full max-w-lg mx-auto p-6 md:p-10 bg-[#f8f9fb] rounded-none md:rounded-2xl shadow-2xl border border-gray-100 flex flex-col justify-center font-sans min-h-[80vh]">
-            <button
-              onClick={() => setShowLogin(false)}
-              aria-label="Close"
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 rounded-full w-10 h-10 flex items-center justify-center bg-white/70 shadow z-50"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-1 tracking-tight">Welcome to DLS Group</h2>
-              <p className="text-gray-500 text-base mb-4">Sign up or log in to start earning or managing campaigns</p>
-              <div className="w-16 mx-auto border-b-2 border-gray-200 mb-2" />
-            </div>
-            <div className="flex-1 flex flex-col items-center justify-center space-y-8">
-              <LoginForm
-                onLogin={handleLogin}
-                onRegister={handleRegister}
-                isLoading={authLoading}
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
     return (
-      <HomePage
-        loginFormProps={{
-          onLogin: handleLogin,
-          onRegister: handleRegister,
-          isLoading: authLoading
-        }}
-        onShowLogin={() => setShowLogin(true)}
-      />
+      <div className="min-h-screen bg-[#09090B] flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Animated Background Gradients for Login */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
+        {/* Homepage Content */}
+        <AnimatePresence mode="wait">
+          {!showLogin ? (
+            <motion.div
+              key="homepage"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="w-full"
+            >
+              <HomePage
+                loginFormProps={{
+                  onLogin: handleLogin,
+                  onRegister: handleRegister,
+                  isLoading: authLoading
+                }}
+                onShowLogin={() => setShowLogin(true)}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="w-full max-w-lg mx-auto p-6 md:p-10 bg-[#f8f9fb] rounded-none md:rounded-2xl shadow-2xl border border-gray-100 flex flex-col justify-center font-sans min-h-[80vh] relative z-10"
+            >
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => setShowLogin(false)}
+                aria-label="Close"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 rounded-full w-10 h-10 flex items-center justify-center bg-white/70 shadow z-50"
+              >
+                <span aria-hidden="true">&times;</span>
+              </motion.button>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-center mb-6"
+              >
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-1 tracking-tight">Welcome to DLS Group</h2>
+                <p className="text-gray-500 text-base mb-4">Sign up or log in to start earning or managing campaigns</p>
+                <div className="w-16 mx-auto border-b-2 border-gray-200 mb-2" />
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex-1 flex flex-col items-center justify-center space-y-8"
+              >
+                <LoginForm
+                  onLogin={handleLogin}
+                  onRegister={handleRegister}
+                  isLoading={authLoading}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
@@ -477,9 +805,9 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Render appropriate dashboard based on user role */}
       {user.role === 'admin' ? (
-        <AdminDashboard currentUser={user} onLogout={handleLogout} onSessionExpired={handleSessionExpired} />
+        <AdminDashboard currentUser={user} onLogout={handleLogout} />
       ) : user.role === 'staff' ? (
-        <StaffDashboard currentUser={user} onLogout={handleLogout} onSessionExpired={handleSessionExpired} />
+        <StaffDashboard currentUser={user} onLogout={handleLogout} />
       ) : (
         <UserDashboard 
           user={user} 
@@ -488,31 +816,49 @@ function App() {
             setUser({ ...user, ...updates });
           }}
           onLogout={handleLogout}
-          onSessionExpired={handleSessionExpired}
         />
       )}
 
       {/* Footer (same as dashboard) */}
-      <footer className="w-full bg-[#171718] border-t border-[#232325] py-6 mt-8 flex flex-col items-center shadow-lg rounded-t-2xl">
+      <footer className="w-full bg-[#171718]/80 backdrop-blur-sm border-t border-[#232325] py-6 mt-8 flex flex-col items-center shadow-lg rounded-t-2xl relative z-10">
         <div className="flex items-center gap-4 justify-center mb-2">
           <span className="text-gray-300 text-base font-semibold tracking-wide">&copy; DLS GROUP | All rights reserved</span>
         </div>
         <div className="flex items-center gap-4 justify-center">
-          <a href="https://t.me/+TDBG7LH2nAdkMDY1" target="_blank" rel="noopener noreferrer" className="group">
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="https://t.me/+TDBG7LH2nAdkMDY1" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Send className="h-5 w-5" />
             </span>
-          </a>
-          <a href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" target="_blank" rel="noopener noreferrer" className="group">
+          </motion.a>
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="https://www.instagram.com/dlsgroup.pvtltd?igsh=MXZ5bDZ1cWU2ajJ6OQ==" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-pink-400 to-yellow-400 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Instagram className="h-5 w-5" />
             </span>
-          </a>
-          <a href="mailto:support@dlsgroup.org.in" className="group">
+          </motion.a>
+          <motion.a 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            href="mailto:support@dlsgroup.org.in" 
+            className="group"
+          >
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-gray-700 to-gray-900 text-white shadow-md transition-transform transform group-hover:scale-110 group-hover:shadow-lg">
               <Mail className="h-5 w-5" />
             </span>
-          </a>
+          </motion.a>
         </div>
       </footer>
     </div>

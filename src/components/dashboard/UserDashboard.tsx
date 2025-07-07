@@ -261,12 +261,12 @@ export function UserDashboard(props: UserDashboardProps) {
   };
 
   const tabList = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-    { id: 'reels', label: `Reels (${stats.totalReels})`, icon: Eye },
-    { id: 'submit', label: 'Submit Reel', icon: Plus },
-    { id: 'accounts', label: 'Accounts', icon: Users },
-    { id: 'campaigns', label: 'Campaigns', icon: Megaphone },
-    { id: 'profile', label: 'Profile', icon: Settings }
+    { id: 'dashboard', label: 'Dashboard', mobileLabel: 'Home', icon: TrendingUp },
+    { id: 'reels', label: `Reels (${stats.totalReels})`, mobileLabel: 'Reels', icon: Eye },
+    { id: 'submit', label: 'Submit Reel', mobileLabel: 'Submit', icon: Plus },
+    { id: 'accounts', label: 'Accounts', mobileLabel: 'Accounts', icon: Users },
+    { id: 'campaigns', label: 'Campaigns', mobileLabel: 'Campaigns', icon: Megaphone },
+    { id: 'profile', label: 'Profile', mobileLabel: 'Profile', icon: Settings }
   ];
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -421,22 +421,23 @@ export function UserDashboard(props: UserDashboardProps) {
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="border-b border-gray-200">
-            <nav className="flex justify-between px-2 sm:px-6">
-              {tabList.map(({ id, label, icon: Icon }) => (
+            <nav className="flex justify-between px-1 sm:px-6 overflow-x-auto">
+              {tabList.map(({ id, label, mobileLabel, icon: Icon }) => (
                 <button
                   key={id}
                   data-tab={id}
                   onClick={() => setActiveTab(id as any)}
-                  className={`flex-1 py-4 px-3 sm:px-4 border-b-2 font-medium text-sm transition-colors min-w-0 text-center ${
+                  className={`flex-shrink-0 py-3 sm:py-4 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-colors min-w-0 text-center ${
                     activeTab === id
                       ? 'border-blue-500 text-blue-600 bg-blue-50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                   style={{ minWidth: 0 }}
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <Icon className="h-5 w-5 mx-auto" />
-                    <span className="text-xs sm:text-sm">{label}</span>
+                  <div className="flex flex-col items-center gap-1 sm:gap-2">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto" />
+                    <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{mobileLabel}</span>
                   </div>
                 </button>
               ))}
