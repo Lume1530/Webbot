@@ -294,7 +294,8 @@ app.post('/api/login', async (req, res) => {
 // Add Instagram Account (requires authentication)
 app.post('/api/accounts', authenticateToken, async (req, res) => {
   try {
-    const { username } = req.body;
+    // Always store and compare lowercase
+    const username = req.body.username.toLowerCase();
     const userId = req.user.id;
 
     // Check if account already exists for this user
