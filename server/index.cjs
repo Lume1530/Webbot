@@ -782,8 +782,9 @@ app.post('/api/admin/users/:id/reject', authenticateToken, requireStaff, async (
 app.post('/api/reels', authenticateToken, async (req, res) => {
   try {
     const {
-      url, shortcode, username, thumbnail, isActive, campaign_id
+      url, shortcode, username: rawUsername, thumbnail, isActive, campaign_id
     } = req.body;
+    const username = rawUsername.toLowerCase();
     const userId = req.user.id;
 
     // Check if the Instagram account belongs to the user and is approved
