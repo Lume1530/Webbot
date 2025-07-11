@@ -1482,7 +1482,13 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                             <div className="bg-green-50 rounded-lg p-2">
                               <p className="text-[10px] text-green-600 font-medium">Total Views</p>
-                              <p className="text-base font-bold text-green-900">{formatViews(c.total_views || 0)}</p>
+                              <p className="text-base font-bold text-green-900">
+                                {formatViews(
+                                  reels
+                                    .filter(r => r.campaign?.id === c.id)
+                                    .reduce((total, r) => total + (Number(r.views) || 0), 0)
+                                )}
+                              </p>
                             </div>
                             <div className="bg-purple-50 rounded-lg p-2">
                               <p className="text-[10px] text-purple-600 font-medium">Pay Rate</p>
