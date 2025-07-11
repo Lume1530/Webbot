@@ -185,12 +185,12 @@ export const testInstagramAPI = async (url: string) => {
 export async function fetchInstagramReelStatsFrontend(reelUrl: string) {
   const encodedUrl = encodeURIComponent(reelUrl);
   const response = await fetch(
-    `https://instagram-looter2.p.rapidapi.com/post?url=${encodedUrl}`,
+    `https://instagram-scraper-stable-api.p.rapidapi.com/get_media_data.php?reel_post_code_or_url=${encodedUrl}&type=reel`,
     {
       method: 'GET',
       headers: {
-        'x-rapidapi-key': '5a4cfb3fe4msh64bf7c7af166feep16a880jsnbaa19be7004b',
-        'x-rapidapi-host': 'instagram-looter2.p.rapidapi.com'
+        'x-rapidapi-key': process.env.RAPIDAPI_KEY || RAPIDAPI_KEY,
+        'x-rapidapi-host': 'instagram-scraper-stable-api.p.rapidapi.com'
       }
     }
   );
@@ -198,10 +198,10 @@ export async function fetchInstagramReelStatsFrontend(reelUrl: string) {
   const data = await response.json();
   return {
     views: data.video_play_count || 0,
-    likes: data.like_count || 0,
-    comments: data.comment_count || 0,
+    likes: data.edge_media_preview_like?.count || 0,
+    comments: data.edge_media_preview_comment?.count || 0,
     username: data.owner?.username || 'unknown',
-    thumbnail: data.display_url || '',
+    thumbnail: data.display_url || data.thumbnail || '',
     shortcode: data.shortcode || extractShortcodeFromUrl(reelUrl) || ''
   };
 } 
