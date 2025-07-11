@@ -1496,7 +1496,13 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                             <div className="bg-yellow-50 rounded-lg p-2">
                               <p className="text-[10px] text-yellow-600 font-medium">Est. Payout</p>
-                              <p className="text-base font-bold text-yellow-900">{formatCurrency(c.estimated_payout || 0)}</p>
+                              <p className="text-base font-bold text-yellow-900">
+                                {formatCurrency(
+                                  ((reels.filter(r => r.campaign?.id === c.id)
+                                    .reduce((total, r) => total + (Number(r.views) || 0), 0) / 1_000_000) * (Number(c.pay_rate) || 0)
+                                  )
+                                )}
+                              </p>
                             </div>
                           </div>
                           
