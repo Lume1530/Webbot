@@ -547,7 +547,7 @@ export function UserDashboard(props: UserDashboardProps) {
                       {!claimLoading?'Claim Referral Earnings':'...Claiming Referral Earnings'}
                     </button>
                 </div>
-                <div className='text-xs mb-2'>*You can only claim when claim amount is more thatn $100</div>
+                <div className='text-xs mb-2'>*You can only claim when claim amount is more than $100</div>
                 <div>
                   <h3 className="font-bold text-xl mb-3 text-gray-800">Referred Users</h3>
                   <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg shadow-sm">

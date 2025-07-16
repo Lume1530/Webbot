@@ -197,13 +197,9 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, email, password, referralCode } = req.body;
 
-        // 1. Check if username already exists
-        // const existingUsername = await pool.query(
-        //     'SELECT * FROM public.users WHERE username = $1',
-        //     [username]
-        // );
-        // if (existingUsername.rows.length > 0) {
-        //     return res.status(400).json({ error: 'Username already exists. Please choose a different username.' });
+        // Validate username is not empty
+        // if (!username || username.trim() === '') {
+        //     return res.status(400).json({ error: 'Username is required' });
         // }
 
         // 2. Check if email already exists
@@ -245,6 +241,7 @@ app.post('/api/register', async (req, res) => {
 
         // 7. Generate OTP and store it with expiry
         const otp = generateSixDigitOTP();
+        await updateOtpInDb(newUserId,otp);
 
         // 8. Send OTP email to the newly registered user
         await sendEmail(email,
