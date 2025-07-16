@@ -3,6 +3,11 @@ import { LoginForm, AdminDashboard, StaffDashboard, UserDashboard } from './comp
 import { authService } from './services/authService';
 import { LogOut, Instagram, Send, Megaphone, Users, User, Briefcase, Youtube, X as XIcon, Bitcoin, IndianRupee, Mail, Menu as MenuIcon, X as CloseIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DatePicker from 'react-datepicker'; 
+import 'react-datepicker/dist/react-datepicker.css';
+import moment from 'moment-timezone'; 
+import { notificationService } from './services/notificationService';
+import { toast } from 'sonner';
 
 // Helper for smooth scroll
 function scrollToRef(ref: React.RefObject<HTMLElement>) {
@@ -19,41 +24,84 @@ interface HomePageProps {
 function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
   const [showPartner, setShowPartner] = useState(false);
   const [partnerForm, setPartnerForm] = useState({ name: '', email: '', contact: '', message: '' });
+  const [appointmentForm, setAppointmentForm] = useState({
+    name: '',
+    email: '',
+    contact: '',
+    message: '',
+    date: null,
+    time: null, 
+    timezone: moment.tz.guess(), 
+  });
+  const [activeTab, setActiveTab] = useState('email');
+
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
   const statsRef = useRef(null);
   const aboutRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const timezones = moment.tz.names();
+
+
+  const handleAppointmentChange = (e:React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setAppointmentForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (date:any) => {
+    setAppointmentForm((prev) => ({ ...prev, date }));
+  };
+
+  const handleTimeChange = (time:any) => {
+    setAppointmentForm((prev) => ({ ...prev, time }));
+  };
+
+  const handleTimezoneChange = (e:any) => {
+    setAppointmentForm((prev) => ({ ...prev, timezone: e.target.value }));
+  };
+
 
   const handlePartnerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setPartnerForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handlePartnerSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSending(true);
-    setError('');
-    setSent(false);
-    try {
-      const apiUrl = typeof window !== 'undefined' && window.location.origin ? `${window.location.origin}/api/send-support-mail` : '/api/send-support-mail';
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...partnerForm })
-      });
-      if (res.ok) {
-        setSent(true);
-        setPartnerForm({ name: '', email: '', contact: '', message: '' });
-      } else {
-        setError('Failed to send. Please try again.');
+ const handlePartnerSubmit = async (e: React.FormEvent, data: any) => {
+  e.preventDefault();
+  setSending(true);
+  try {
+    try{
+    if (activeTab === 'appointment') {
+      if(typeof (data.date as Date)!='string') {
+      data['date'] = (data.date as Date)?.toISOString()?.split('T')[0] || ''
       }
-    } catch (err) {
-      setError('Failed to send. Please try again.');
-    } finally {
-      setSending(false);
+    if(typeof (data.time as Date)!='string') {
+      data['time'] = (data.time as Date)?.toTimeString()?.split(' ')[0] || ''
+      }
     }
-  };
+  }catch(e){
+
+  }
+
+    const res = await notificationService.sendSupportMail(data);
+    if (res.success) {
+      setShowPartner(false);
+      if (activeTab === 'email') {
+        toast.success('Partner request sent successfully!. We will get back to you soon!'); // Corrected toast message
+      } else { // activeTab === 'appointment'
+        toast.success('Appointment request sent successfully!. We will get back to you soon!');
+      }
+
+      setPartnerForm({ name: '', email: '', contact: '', message: '' });
+      setAppointmentForm({ name: '', email: '', contact: '', message: '', date: null, time: null, timezone: moment.tz.guess() });
+    } else {
+      toast.error('Failed to send. Please try again.');
+    }
+  } catch (err) {
+    console.error("Submission error:", err); // Log the actual error
+    toast.error('Failed to send. Please try again.');
+  } finally {
+    setSending(false);
+  }
+};
 
   // Menu actions
   const handleMenu = (section: string) => {
@@ -516,61 +564,236 @@ function HomePage({ loginFormProps, onShowLogin }: HomePageProps) {
 
       {/* Partner With Us Modal */}
       <AnimatePresence>
-        {showPartner && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      {showPartner && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 py-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg m-4 my-8 relative h-full overflow-y-auto"
           >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4 relative"
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowPartner(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors"
             >
-              <motion.button 
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowPartner(false)} 
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors"
+              &times;
+            </motion.button>
+            <h3 className="text-2xl font-bold mb-4 text-center">Partner With Us</h3>
+
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
+              <button
+                onClick={() => setActiveTab('email')}
+                className={`flex-1 py-3 text-center text-lg font-[600] ${
+                  activeTab === 'email'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                } transition-colors duration-200`}
               >
-                &times;
-              </motion.button>
-              <h3 className="text-2xl font-bold text-orange-600 mb-4">Partner With Us</h3>
-              <form onSubmit={handlePartnerSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brand Name</label>
-                  <input name="name" value={partnerForm.name} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input name="email" type="email" value={partnerForm.email} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                  <input name="contact" value={partnerForm.contact} onChange={handlePartnerChange} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                  <textarea name="message" value={partnerForm.message} onChange={handlePartnerChange} required rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none transition-all" />
-                </div>
-                {error && <div className="text-red-600 text-sm">{error}</div>}
-                {sent && <div className="text-green-600 text-sm">Thank you! We received your message.</div>}
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit" 
-                  disabled={sending} 
-                  className="w-full bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
+                Email Us Your Need
+              </button>
+              <button
+                onClick={() => setActiveTab('appointment')}
+                className={`flex-1 py-3 text-center text-lg font-[600] ${
+                  activeTab === 'appointment'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                } transition-colors duration-200`}
+              >
+                Schedule an Appointment
+              </button>
+            </div>
+
+            {/* Tab Content with Framer Motion AnimatePresence */}
+            <AnimatePresence mode="wait">
+              {activeTab === 'email' && (
+                <motion.div
+                  key="email-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
                 >
-                  {sending ? 'Sending...' : 'Send'}
-                </motion.button>
-              </form>
-            </motion.div>
+                  <form onSubmit={e=>handlePartnerSubmit(e,{...partnerForm})} className='flex flex-col space-y-3'>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brand Name</label>
+                      <input
+                        name="name"
+                        value={partnerForm.name}
+                        onChange={handlePartnerChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0   transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        name="email"
+                        type="email"
+                        value={partnerForm.email}
+                        onChange={handlePartnerChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                      <input
+                        name="contact"
+                        value={partnerForm.contact}
+                        onChange={handlePartnerChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                      <textarea
+                        name="message"
+                        value={partnerForm.message}
+                        onChange={handlePartnerChange}
+                        required
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 resize-none transition-all"
+                      />
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={sending}
+                      className="w-full bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      {sending ? 'Sending...' : 'Send'}
+                    </motion.button>
+                  </form>
+                </motion.div>
+              )}
+
+              {activeTab === 'appointment' && (
+                <motion.div
+                  key="appointment-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
+                >
+                  <form onSubmit={e=>handlePartnerSubmit(e,{...appointmentForm})}  className='flex flex-col space-y-3'>
+                    {/* Common fields */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brand Name</label>
+                      <input
+                        name="name"
+                        value={appointmentForm.name}
+                        onChange={handleAppointmentChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        name="email"
+                        type="email"
+                        value={appointmentForm.email}
+                        onChange={handleAppointmentChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                      <input
+                        name="contact"
+                        value={appointmentForm.contact}
+                        onChange={handleAppointmentChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                      />
+                    </div>
+                    {/* Date and Time Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
+                        <DatePicker
+                          selected={appointmentForm.date}
+                          onChange={handleDateChange}
+                          dateFormat="MM/dd/yyyy"
+                          minDate={new Date()} // Prevent selecting past dates
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                          placeholderText="Select a date"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                        <DatePicker
+                          selected={appointmentForm.time}
+                          onChange={handleTimeChange}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Time"
+                          dateFormat="h:mm aa"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                          placeholderText="Select a time"
+                          required
+                        />
+                      </div>
+                    </div>
+                    {/* Timezone Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Your Timezone</label>
+                      <select
+                        name="timezone"
+                        value={appointmentForm.timezone}
+                        onChange={handleTimezoneChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 transition-all"
+                        required
+                      >
+                        {timezones.map((tz) => (
+                          <option key={tz} value={tz}>
+                            {tz}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Message (Optional)</label>
+                      <textarea
+                        name="message"
+                        value={appointmentForm.message}
+                        onChange={handleAppointmentChange}
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-0 resize-none transition-all"
+                      />
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={sending}
+                      className="w-full bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      {sending ? 'Scheduling...' : 'Schedule Appointment'}
+                    </motion.button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
-        )}
+        </motion.div>
+      )}
       </AnimatePresence>
 
       {/* Footer (same as dashboard) */}
@@ -674,6 +897,14 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
+   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+      setShowLogin(true);
+    }
+  }, []);
+
   useEffect(() => {
     // Check if user is already logged in and validate token
     const validateAndSetUser = async () => {
@@ -696,6 +927,28 @@ function App() {
     validateAndSetUser();
   }, []);
 
+   const handleRequestOtp = async (otp:string,email:string,password:string) => {
+     setAuthLoading(true);
+    try {
+      let result=await authService.verifyOtp({
+        otp,
+        email: email,  
+        password: password
+      });
+      if (result.success) {
+        const currentUser = authService.getCurrentUser();
+        setUser(currentUser);
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+  } catch (error) {
+      return { success: false, error: 'Otp verification failed' };
+    } finally {
+      setAuthLoading(false);
+    }
+    };
+
   const handleLogin = async (username: string, password: string) => {
     setAuthLoading(true);
     try {
@@ -714,7 +967,7 @@ function App() {
     }
   };
 
-  const handleRegister = async (userData: { username: string; email: string; password: string }) => {
+  const handleRegister = async (userData: { username: string; email: string; password: string,referralCode?:string }) => {
     setAuthLoading(true);
     try {
       const result = await authService.register(userData);
@@ -745,7 +998,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#09090B] flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen overflow-y-auto bg-[#09090B] flex flex-col items-center justify-center relative overflow-hidden">
         {/* Animated Background Gradients for Login */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl animate-pulse"></div>
@@ -778,7 +1031,7 @@ function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 100 }}
               transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="w-full max-w-lg mx-auto p-6 md:p-10 bg-[#f8f9fb] rounded-none md:rounded-2xl shadow-2xl border border-gray-100 flex flex-col justify-center font-sans min-h-[80vh] relative z-10"
+              className="h-screen bg-[#09090B] w-full my-12 text-gray-900 flex flex-col md:flex-row justify-center"
             >
               <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -786,7 +1039,7 @@ function App() {
                 transition={{ delay: 0.3 }}
                 onClick={() => setShowLogin(false)}
                 aria-label="Close"
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 rounded-full w-10 h-10 flex items-center justify-center bg-white/70 shadow z-50"
+                className="absolute top-4 right-4 hover:text-gray-600 text-2xl font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 rounded-full w-8 h-8 flex items-center justify-center bg-white/70 shadow z-50"
               >
                 <span aria-hidden="true">&times;</span>
               </motion.button>
@@ -795,23 +1048,45 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-center mb-6"
+                className="max-w-screen-xl px-4 md:pl-8 bg-[#09090B] shadow flex justify-center  items-center md:items-start pt-12 md:pt-0 md:flex-1 flex-col"
               >
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-1 tracking-tight">Welcome to DLS Group</h2>
-                <p className="text-gray-500 text-base mb-4">Sign up or log in to start earning or managing campaigns</p>
-                <div className="w-16 mx-auto border-b-2 border-gray-200 mb-2" />
+                <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-3xl md:text-5xl font-extrabold mb-4 text-white tracking-tight "
+              style={{
+                background: 'linear-gradient(135deg, #fff 0%, #f3e8ff 50%, #e9d5ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 30px rgba(168, 85, 247, 0.5))'
+              }}
+            >
+              Welcome to DLS Group
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              className="text-lg md:text-2xl md:mb-8 max-w-xl font-medium text-gray-300"
+            >
+              Sign up or log in to start earning or managing campaigns
+            </motion.p>
+              
               </motion.div>
               
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="flex-1 flex flex-col items-center justify-center space-y-8"
+                className="flex-1 bg-[#09090B] w-full flex flex-col items-center justify-center md:space-y-8"
               >
                 <LoginForm
                   onLogin={handleLogin}
                   onRegister={handleRegister}
                   isLoading={authLoading}
+                  handleRequestOtp={handleRequestOtp}
                 />
               </motion.div>
             </motion.div>

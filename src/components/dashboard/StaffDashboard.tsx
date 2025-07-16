@@ -4,6 +4,8 @@ import { User, Reel } from '../../types';
 import { authService } from '../../services/authService';
 import { accountService } from '../../services/accountService';
 import { NotificationCenter } from '../common/NotificationCenter';
+import { toast } from 'sonner';
+const API_BASE_URL = '/api';
 
 interface StaffDashboardProps {
   currentUser: User;
@@ -31,7 +33,7 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
       
       // Fetch all reels for staff (without view data)
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/reels', {
+      const res = await fetch(`${API_BASE_URL}/admin/reels`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allReels = await res.json();
@@ -62,53 +64,78 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
 
 
   const handleDeleteReel = async (reelId: string) => {
-    if (confirm('Are you sure you want to delete this reel?')) {
-      try {
-        const response = await fetch(`/api/admin/reels/${reelId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        if (response.ok) {
-          loadData();
-        } else {
-          alert('Failed to delete reel');
-        }
-      } catch (error) {
-        console.error('Delete reel error:', error);
-        alert('Failed to delete reel');
-      }
-    }
+    toast("Delete Rel", {
+      description: "Are you sure you want to delete this reel?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/reels/${reelId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            
+            if (response.ok) {
+              toast.success('Reel deleted successfully.');
+              loadData();
+            } else {
+              toast.error('Failed to delete reel');
+            }
+          } catch (error) {
+            console.error('Delete reel error:', error);
+            toast.error('Failed to delete reel');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
+    
   };
 
   const handleBulkDeleteReels = async () => {
     if (selectedReels.length === 0) {
-      alert('Please select reels to delete');
+      toast.error('Please select reels to delete');
       return;
     }
 
-    if (confirm(`Are you sure you want to delete ${selectedReels.length} reels?`)) {
-      try {
-        const response = await fetch('/api/admin/reels/bulk-delete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({ reelIds: selectedReels })
-        });
-        
-        if (response.ok) {
-          setSelectedReels([]);
-          loadData();
-        } else {
-          alert('Failed to delete reels');
-        }
-      } catch (error) {
-        console.error('Bulk delete reels error:', error);
-        alert('Failed to delete reels');
-      }
-    }
+    toast("Delete Reels", {
+      description: `Are you sure you want to delete ${selectedReels.length} reels?`,
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/reels/bulk-delete`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ reelIds: selectedReels })
+            });
+            
+            if (response.ok) {
+              toast.success('Reels deleted successfully.')
+              setSelectedReels([]);
+              loadData();
+            } else {
+              toast.error('Failed to delete reels');
+            }
+          } catch (error) {
+            console.error('Bulk delete reels error:', error);
+            toast.error('Failed to delete reels');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
   };
 
   const handleApproveUser = async (userId: string) => {
@@ -117,25 +144,38 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
       if (success) {
         await loadData();
       } else {
-        alert('Failed to approve user');
+        toast.error('Failed to approve user');
       }
     } catch (error) {
       console.error('Failed to approve user:', error);
-      alert('An error occurred while approving the user');
+      toast.error('An error occurred while approving the user');
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        const success = await authService.deleteUser(userId);
-        if (success) {
-          await loadData();
-        }
-      } catch (error) {
-        console.error('Failed to delete user:', error);
-      }
-    }
+    toast("Delete User", {
+      description: "Are you sure you want to delete this user?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const success = await authService.deleteUser(userId);
+            if (success) {
+              toast.success('User deleted successfully.')
+              await loadData();
+            }
+          } catch (error) {
+            console.error('Failed to delete user:', error);
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
+    
   };
 
   const handleApproveInstagramAccount = async (accountId: string) => {
@@ -145,11 +185,11 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
         await loadInstagramAccounts();
         await loadPendingInstagramAccounts();
       } else {
-        alert('Failed to approve Instagram account');
+        toast.error('Failed to approve Instagram account');
       }
     } catch (error) {
       console.error('Failed to approve Instagram account:', error);
-      alert('An error occurred while approving the Instagram account');
+      toast.error('An error occurred while approving the Instagram account');
     }
   };
 
@@ -160,11 +200,11 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
         await loadInstagramAccounts();
         await loadPendingInstagramAccounts();
       } else {
-        alert('Failed to reject Instagram account');
+        toast.error('Failed to reject Instagram account');
       }
     } catch (error) {
       console.error('Failed to reject Instagram account:', error);
-      alert('An error occurred while rejecting the Instagram account');
+      toast.error('An error occurred while rejecting the Instagram account');
     }
   };
 
@@ -524,10 +564,26 @@ export function StaffDashboard({ currentUser, onLogout }: StaffDashboardProps) {
                         <div className="flex space-x-3">
                           <button
                             onClick={async () => {
-                              if (window.confirm('Are you sure you want to delete this Instagram account?')) {
-                                await accountService.removeAccount(account.id, true);
+                              toast("Delete Instagram Account", {
+                                description: "Are you sure you want to delete this Instagram account?",
+                                action: {
+                                  label: "Delete",
+                                  onClick: async () => {
+                                    try{
+                                      await accountService.removeAccount(account.id, true);
+                                      toast.success('Instaram account deleted successfully.')
                                 loadInstagramAccounts();
-                              }
+                                    }catch(e){
+                                      toast.success('Failed to delete instaram account.')
+                                    }
+                                  },
+                                },
+                                cancel: {
+                                  label: 'Cancel',
+                                  onClick: () => {},
+                                },
+                                
+                              });
                             }}
                             className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
                             title="Delete Account"

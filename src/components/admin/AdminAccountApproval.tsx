@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { accountService, PendingAccount } from '../../services/accountService';
 import { CheckCircle, XCircle, Clock, User, Mail } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const AdminAccountApproval: React.FC = () => {
   const [pendingAccounts, setPendingAccounts] = useState<PendingAccount[]>([]);
@@ -39,11 +40,11 @@ export const AdminAccountApproval: React.FC = () => {
         setPendingAccounts(prev => prev.filter(acc => acc.id !== accountId));
         console.log('Account approved successfully');
       } else {
-        alert('Failed to approve account: ' + result.error);
+        toast.error('Failed to approve account: ' + result.error);
       }
     } catch (error) {
       console.error('Approve error:', error);
-      alert('An error occurred while approving the account');
+      toast.error('An error occurred while approving the account');
     } finally {
       console.log('Resetting processingId to null');
       setProcessingId(null);
@@ -60,10 +61,10 @@ export const AdminAccountApproval: React.FC = () => {
         setRejectionReason('');
         setShowRejectModal(null);
       } else {
-        alert('Failed to reject account: ' + result.error);
+        toast.error('Failed to reject account: ' + result.error);
       }
     } catch (error) {
-      alert('An error occurred while rejecting the account');
+      toast.error('An error occurred while rejecting the account');
     } finally {
       setProcessingId(null);
     }

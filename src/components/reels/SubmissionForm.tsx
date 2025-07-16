@@ -75,7 +75,7 @@ export function SubmissionForm({ onSubmit, onBulkSubmit, isLoading, error, userC
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 items-left sm:items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-2 rounded-lg">
                 <Target className="h-5 w-5 text-white" />

@@ -1,7 +1,7 @@
 import { User } from '../types';
 
 // Use environment variable for API URL, fallback to relative path for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = '/api';
 
 class AuthService {
   private currentUser: User | null = null;
@@ -122,6 +122,7 @@ class AuthService {
     username: string;
     email: string;
     password: string;
+    referralCode?: string;
   }): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/register`, {
@@ -347,7 +348,7 @@ class AuthService {
 
   async getPaymentMethods(): Promise<{ usdt?: string; upi?: string; paypal?: string; telegram?: string }> {
     try {
-      const response = await fetch('/api/user/payment', {
+      const response = await fetch(`${API_BASE_URL}/user/payment`, {
         headers: this.getAuthHeaders(),
       });
       return await response.json();
@@ -357,9 +358,21 @@ class AuthService {
     }
   }
 
+  async checkEmail(email:string): Promise<{ user: { user_exist: boolean,isApproved:boolean | null } }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/check-email?email=${email}`, {
+        headers: this.getAuthHeaders(),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Get payment methods error:', error);
+      return {user:{user_exist:false,isApproved:null}};
+    }
+  }
+
   async updatePaymentMethods(data: { usdt?: string; upi?: string; paypal?: string; telegram?: string }): Promise<boolean> {
     try {
-      const response = await fetch('/api/user/payment', {
+      const response = await fetch(`${API_BASE_URL}/user/payment`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
@@ -368,6 +381,70 @@ class AuthService {
     } catch (error) {
       console.error('Update payment methods error:', error);
       return false;
+    }
+  }
+
+  async sendOtp(data: { email: string,password:string }): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/resend-otp`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('Failed to send otp:', error);
+      throw  error
+    }
+  }
+
+  async verifyOtp(payload: { otp: string; email: string; password: string; }): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/verify-otp`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Otp verification failed' };
+      }
+
+      // Store token and user
+      this.token = data.token;
+      this.refreshToken = data.refreshToken || null;
+      this.tokenExpiry = data.expiresIn ? Date.now() + (data.expiresIn * 1000) : Date.now() + (24 * 60 * 60 * 1000); // Default 24 hours
+      this.currentUser = data.user;
+      
+      // Store in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      if (this.refreshToken) {
+        localStorage.setItem('refreshToken', this.refreshToken);
+      }
+      if (this.tokenExpiry) {
+        localStorage.setItem('tokenExpiry', this.tokenExpiry.toString());
+      }
+
+      return { success: true, user: data.user };
+    } catch (error) {
+      console.error('Failed to send otp:', error);
+      return {success:false,error:'Failed to verify otp. Please try again.'};
+    }
+  }
+
+  async forgotPassword(payload: { otp: string; email: string; password: string; }): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to updated password', error);
+      throw error;
     }
   }
 }

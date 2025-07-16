@@ -21,7 +21,7 @@ export function Header({ user, onForceUpdate, isUpdating, onSessionExpired }: He
               <BarChart3 className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Instagram Reel Tracker</h1>
+              <h1 className="text-2xl font-bold">Creator Dashboard</h1>
               <p className="text-white/80">Track your content performance</p>
             </div>
           </div>

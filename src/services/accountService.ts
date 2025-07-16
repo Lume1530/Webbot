@@ -159,6 +159,38 @@ class AccountService {
       return { success: false, error: 'Network error' };
     }
   }
+
+  async getReferralData(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/referrals`, {
+        headers: this.getAuthHeaders(),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch referral data');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Get referral data error:', error);
+      throw error;
+    }
+  }
+
+  async claimReferal(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/referral-claims`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+      if (!response.ok) {
+        let data =await response.json()
+        throw new Error(data?.message || 'Failed to claim referral');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('failed to claim referral error:', error);
+      throw error;
+    }
+  }
 }
 
 export const accountService = new AccountService(); 

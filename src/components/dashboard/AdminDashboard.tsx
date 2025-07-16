@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Activity, DollarSign, TrendingUp, Eye, Settings, UserCheck, UserX, Trash2, Clock, Megaphone, Edit, Plus, Download, PlusCircle, MinusCircle, FileSpreadsheet, Trophy } from 'lucide-react';
+import { Users, Activity, DollarSign, TrendingUp, Eye, Settings, UserCheck, UserX, Trash2, Clock, Megaphone, Edit, Plus, Download, PlusCircle, MinusCircle, FileSpreadsheet, Trophy, MonitorCheck, FileInput } from 'lucide-react';
 import { User, Reel } from '../../types';
 import { authService } from '../../services/authService';
 import { trackingService } from '../../services/trackingService';
@@ -7,6 +7,9 @@ import { AdminAccountApproval } from '../admin/AdminAccountApproval';
 import { NotificationCenter } from '../common/NotificationCenter';
 import { formatViews, formatCurrency } from '../../utils/instagram';
 import { accountService } from '../../services/accountService';
+import { toast } from 'sonner';
+import { notificationService } from '../../services/notificationService';
+const API_BASE_URL = '/api';
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -61,7 +64,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       setUsers(usersData);
       // Fetch all reels for admin
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/reels', {
+      const res = await fetch(`${API_BASE_URL}/admin/reels`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allReels = await res.json();
@@ -72,14 +75,17 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   };
 
   const loadCampaigns = async () => {
-    const res = await fetch('/api/campaigns');
-    setCampaigns(await res.json());
+    const res = await fetch(`${API_BASE_URL}/campaigns`);
+    let camp= await res.json();
+    if(!camp.error) {
+      setCampaigns(camp || []);
+    }
   };
 
   const loadStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/stats', {
+      const res = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -92,7 +98,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
   const loadInstagramAccounts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/instagram-accounts', {
+      const res = await fetch(`${API_BASE_URL}/admin/instagram-accounts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const accounts = await res.json();
@@ -107,7 +113,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     // TODO: Implement this endpoint in backend
     // try {
     //   const token = localStorage.getItem('token');
-    //   const res = await fetch('/api/admin/instagram-stats', {
+    //   const res = await fetch(`${API_BASE_URL}/admin/instagram-stats', {
     //     headers: { 'Authorization': `Bearer ${token}` }
     //   });
     //   const stats = await res.json();
@@ -134,75 +140,113 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
       if (success) {
         await loadData();
       } else {
-        alert('Failed to approve user');
+        toast.error('Failed to approve user');
       }
     } catch (error) {
       console.error('AdminDashboard: Failed to approve user:', error);
-      alert('An error occurred while approving the user');
+      toast.error('An error occurred while approving the user');
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        const success = await authService.deleteUser(userId);
-        if (success) {
-          await loadData();
-        }
-      } catch (error) {
-        console.error('Failed to delete user:', error);
-      }
-    }
+    toast("Delete User", {
+      description: "Are you sure you want to delete this user?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const success = await authService.deleteUser(userId);
+            if (success) {
+              toast.success('User deleted successfully.')
+              await loadData();
+            }
+          } catch (error) {
+            console.error('Failed to delete user:', error);
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
   };
 
   const handleDeleteReel = async (reelId: string) => {
-    if (confirm('Are you sure you want to delete this reel?')) {
-      try {
-        const response = await fetch(`/api/admin/reels/${reelId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        if (response.ok) {
-          loadData();
-        } else {
-          alert('Failed to delete reel');
-        }
-      } catch (error) {
-        console.error('Delete reel error:', error);
-        alert('Failed to delete reel');
-      }
-    }
+    toast("Delete Reel", {
+      description: "Are you sure you want to delete this reel?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/reels/${reelId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            
+            if (response.ok) {
+              toast.success('Reel deleted sucessfully.')
+              loadData();
+            } else {
+              toast.error('Failed to delete reel');
+            }
+          } catch (error) {
+            console.error('Delete reel error:', error);
+            toast.error('Failed to delete reel');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
+    
   };
 
   const handleBulkDeleteReels = async () => {
     if (selectedReels.length === 0) {
-      alert('Please select reels to delete');
+      toast.error('Please select reels to delete');
       return;
     }
+
+    toast("Delete Reels", {
+      description: `Are you sure you want to delete ${selectedReels.length} selected reels?`,
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/admin/reels/bulk-delete`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` 
+              },
+              body: JSON.stringify({ reelIds: selectedReels })
+            });
+            
+            if (response.ok) {
+              toast.success('Reels deleted successfully.')
+              setSelectedReels([]);
+              loadData();
+            } else {
+              toast.error('Failed to delete reels');
+            }
+          } catch (error) {
+            console.error('Bulk delete reels error:', error);
+            toast.error('Failed to delete reels');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
     
-    if (confirm(`Are you sure you want to delete ${selectedReels.length} selected reels?`)) {
-      try {
-        const response = await fetch('/api/admin/reels/bulk-delete', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          },
-          body: JSON.stringify({ reelIds: selectedReels })
-        });
-        
-        if (response.ok) {
-          setSelectedReels([]);
-          loadData();
-        } else {
-          alert('Failed to delete reels');
-        }
-      } catch (error) {
-        console.error('Bulk delete reels error:', error);
-        alert('Failed to delete reels');
-      }
-    }
   };
 
   const handleSelectAllReels = (checked: boolean) => {
@@ -231,15 +275,15 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     try {
       const token = localStorage.getItem('token');
       // Call the new backend endpoint to force update all reels in the campaign
-      await fetch(`/api/admin/campaigns/${campaign.id}/force-update`, {
+      await fetch(`${API_BASE_URL}/admin/campaigns/${campaign.id}/force-update`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setShowForceUpdateModal(false);
       setSelectedCampaignForUpdate(null);
-      alert('Force update started. You will be notified when the process is complete.');
+      toast.success('Force update started. You will be notified when the process is complete.');
     } catch (error) {
-      alert('Failed to force update campaign reels');
+      toast.error('Failed to force update campaign reels');
     } finally {
       setForceUpdateLoading(false);
     }
@@ -247,7 +291,8 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch('/api/campaigns', {
+    
+    await fetch(`${API_BASE_URL}/campaigns`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       body: JSON.stringify({ ...campaignForm, platform: campaignForm.platform.join(','), status: campaignForm.status })
@@ -276,7 +321,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
     if (!editingCampaign) return;
     
     try {
-      const response = await fetch(`/api/campaigns/${editingCampaign.id}`, {
+      const response = await fetch(`${API_BASE_URL}/campaigns/${editingCampaign.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ...campaignForm, platform: campaignForm.platform.join(','), status: campaignForm.status })
@@ -287,38 +332,52 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         setCampaignForm({ name: '', pay_rate: '', total_budget: '', description: '', requirements: '', platform: ['instagram'], status: 'active', min_post_date: '' });
         loadCampaigns();
       } else {
-        alert('Failed to update campaign');
+        toast.error('Failed to update campaign');
       }
     } catch (error) {
       console.error('Update campaign error:', error);
-      alert('Failed to update campaign');
+      toast.error('Failed to update campaign');
     }
   };
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
-    
-    try {
-      const response = await fetch(`/api/campaigns/${campaignId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+    toast("Delete Campaign", {
+      description: "Are you sure you want to delete this campaign?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/campaigns/${campaignId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            toast.success("Campaign deleted successfully.")
+            
+            if (response.ok) {
+              loadCampaigns();
+            } else {
+              toast.error('Failed to delete campaign');
+            }
+          } catch (error) {
+            console.error('Delete campaign error:', error);
+            toast.error('Failed to delete campaign');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
       
-      if (response.ok) {
-        loadCampaigns();
-      } else {
-        alert('Failed to delete campaign');
-      }
-    } catch (error) {
-      console.error('Delete campaign error:', error);
-      alert('Failed to delete campaign');
-    }
+    });
+    
+  
   };
 
   const handleExportCampaignReels = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/campaigns/${campaignId}/export`, {
+      const response = await fetch(`${API_BASE_URL}/admin/campaigns/${campaignId}/export`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -333,18 +392,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('Failed to export campaign reels');
+        toast.error('Failed to export campaign reels');
       }
     } catch (error) {
       console.error('Export campaign reels error:', error);
-      alert('Failed to export campaign reels');
+      toast.error('Failed to export campaign reels');
     }
   };
 
   const handleExportAllReels = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/reels/export', {
+      const response = await fetch(`${API_BASE_URL}/admin/reels/export`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -359,11 +418,21 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('Failed to export all reels');
+        toast.error('Failed to export all reels');
       }
     } catch (error) {
       console.error('Export all reels error:', error);
-      alert('Failed to export all reels');
+      toast.error('Failed to export all reels');
+    }
+  };
+
+  const handleSendInvoice = async (id:number) => {
+    try {
+      await notificationService.sendInvoiceMail(id);
+      toast.success('User Invoice Send Successfully.')
+    } catch (error) {
+      console.error('Failed to send Invoice:', error);
+      toast.error('Failed to send Invoice');
     }
   };
 
@@ -388,13 +457,13 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
   const handleUpdateUserViews = async () => {
     if (!selectedUserForEdit || !viewEditAmount || isNaN(Number(viewEditAmount))) {
-      alert('Please enter a valid number');
+      toast.error('Please enter a valid number');
       return;
     }
 
     let amount = parseInt(viewEditAmount);
     if (isNaN(amount) || amount === 0) {
-      alert('Please enter a non-zero number');
+      toast.error('Please enter a non-zero number');
       return;
     }
     if (viewEditAction === 'remove') amount = -Math.abs(amount);
@@ -402,7 +471,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
 
     try {
       const token = authService.getToken();
-      const response = await fetch(`/api/admin/users/${selectedUserForEdit.id}/views`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${selectedUserForEdit.id}/views`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -418,7 +487,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         setShowViewEditModal(false);
         setSelectedUserForEdit(null);
         setViewEditAmount('');
-        alert(`Successfully ${viewEditAction === 'add' ? 'added' : 'removed'} ${amount.toLocaleString()} views to ${selectedUserForEdit.username}`);
+        toast.success(`Successfully ${viewEditAction === 'add' ? 'added' : 'removed'} ${amount.toLocaleString()} views to ${selectedUserForEdit.username}`);
       } else {
         let errorMessage = 'Failed to edit views';
         try {
@@ -428,18 +497,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
           // If response.json() fails, use status text
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
-        alert(`Error: ${errorMessage}`);
+        toast.error(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error updating user views:', error);
-      alert('Error updating user views');
+      toast.error('Error updating user views');
     }
   };
 
   const handleExportCampaignSummary = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/campaigns/${campaignId}/export-summary`, {
+      const response = await fetch(`${API_BASE_URL}/admin/campaigns/${campaignId}/export-summary`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -453,18 +522,18 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('Failed to export campaign summary');
+        toast.error('Failed to export campaign summary');
       }
     } catch (error) {
       console.error('Export campaign summary error:', error);
-      alert('Failed to export campaign summary');
+      toast.error('Failed to export campaign summary');
     }
   };
 
   const handleDownloadLeaderboardImage = async (campaignId: string, campaignName: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/campaigns/${campaignId}/leaderboard-image`, {
+      const response = await fetch(`${API_BASE_URL}/admin/campaigns/${campaignId}/leaderboard-image`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -478,11 +547,11 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('Failed to download leaderboard image');
+        toast.error('Failed to download leaderboard image');
       }
     } catch (error) {
       console.error('Download leaderboard image error:', error);
-      alert('Failed to download leaderboard image');
+      toast.error('Failed to download leaderboard image');
     }
   };
 
@@ -785,10 +854,22 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                       <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto min-w-0">
                         <button
                           onClick={async () => {
-                            if (window.confirm('Are you sure you want to remove this Instagram account?')) {
-                              await accountService.removeAccount(account.id, true);
-                              loadInstagramAccounts();
-                            }
+                            toast("Remove Instagram Account", {
+                              description: "Are you sure you want to remove this Instagram account?",
+                              action: {
+                                label: "Delete",
+                                onClick: async () => {
+                                  await accountService.removeAccount(account.id, true);
+                                  toast.success('Instagram account deleted.')
+                                  loadInstagramAccounts();
+                                },
+                              },
+                              cancel: {
+                                label: 'Cancel',
+                                onClick: () => {},
+                              },
+                              
+                            });
                           }}
                           className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1 text-xs flex-1 min-w-0"
                         >
@@ -846,10 +927,23 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                         <div className="flex flex-col sm:flex-row gap-1 w-full sm:w-auto min-w-0">
                           <button
                             onClick={async () => {
-                              if (window.confirm('Are you sure you want to remove this Instagram account?')) {
-                                await accountService.removeAccount(account.id, true);
-                                loadInstagramAccounts();
-                              }
+
+                              toast("Remove Instagram Account", {
+                                description: "Are you sure you want to remove this Instagram account?",
+                                action: {
+                                  label: "Delete",
+                                  onClick: async () => {
+                                    await accountService.removeAccount(account.id, true);
+                                    toast.success('Instagram account deleted.')
+                                    loadInstagramAccounts();
+                                  },
+                                },
+                                cancel: {
+                                  label: 'Cancel',
+                                  onClick: () => {},
+                                },
+                                
+                              });
                             }}
                             className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-2 py-1 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1 text-xs flex-1 min-w-0"
                           >
@@ -922,8 +1016,8 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <div className="divide-y divide-gray-200">
                   {pendingUsers.map(user => (
                     <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex flex-1 items-center space-x-4">
                           <div className="h-12 w-12 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center text-white font-semibold">
                             {user.username.charAt(0).toUpperCase()}
                           </div>
@@ -933,7 +1027,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             <p className="text-sm text-gray-500">Registered: {new Date(user.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
-                        <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3">
+                        <div className="flex flex-row gap-4 sm:flex-col xs:flex-row ">
                           <button
                             onClick={() => handleApproveUser(user.id)}
                             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
@@ -974,7 +1068,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <div className="divide-y divide-gray-200">
                   {users.filter(u => u.isApproved).map(user => (
                     <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center space-x-4">
                           <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center text-white font-semibold">
                             {user.username.charAt(0).toUpperCase()}
@@ -993,22 +1087,22 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 w-full sm:w-auto min-w-0">
+                        <div className="flex flex-row sm:flex-col gap-3 w-auto min-w-0">
                           <button
                             onClick={() => handleEditUserViews(user)}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-xs flex-1 min-w-0 min-w-[44px] w-[44px] h-[44px] p-0 sm:px-2 sm:py-1 sm:w-auto sm:h-auto sm:gap-1"
+                            className="bg-gradient-to-r gap-2 noeord-break from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-center flex-1  p-2 sm:w-auto sm:h-auto sm:gap-1"
                             title="Edit Views"
                           >
                             <Edit className="h-5 w-5" />
-                            <span className="hidden sm:inline">Edit Views</span>
+                            <span>Edit Views</span>
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-xs flex-1 min-w-0 min-w-[44px] w-[44px] h-[44px] p-0 sm:px-2 sm:py-1 sm:w-auto sm:h-auto sm:gap-1"
+                            className="bg-gradient-to-r gap-2 from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center justify-start   p-2 sm:w-auto sm:h-auto sm:gap-1"
                             title="Delete User"
                           >
                             <Trash2 className="h-5 w-5" />
-                            <span className="hidden sm:inline">Delete</span>
+                            <span >Delete</span>
                           </button>
                         </div>
                       </div>
@@ -1277,7 +1371,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-sm">Active Users</p>
-                    <p className="text-3xl font-bold">{Number(campaigns.reduce((total, c) => total + (Number(c.active_users) || 0), 0))}</p>
+                    <p className="text-3xl font-bold">{Array.isArray(campaigns) ? Number(campaigns.reduce((total, c) => total + (Number(c.active_users) || 0), 0)):0}</p>
                   </div>
                   <Users className="h-8 w-8 text-green-200" />
                 </div>
@@ -1461,7 +1555,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
-                      {campaigns.map((c: any) => (
+                      {Array.isArray(campaigns) && campaigns.map((c: any) => (
                     <div key={c.id} className="p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1482,13 +1576,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                             <div className="bg-green-50 rounded-lg p-2">
                               <p className="text-[10px] text-green-600 font-medium">Total Views</p>
-                              <p className="text-base font-bold text-green-900">
-                                {formatViews(
-                                  reels
-                                    .filter(r => r.campaign?.id === c.id)
-                                    .reduce((total, r) => total + (Number(r.views) || 0), 0)
-                                )}
-                              </p>
+                              <p className="text-base font-bold text-green-900">{formatViews(c.total_views || 0)}</p>
                             </div>
                             <div className="bg-purple-50 rounded-lg p-2">
                               <p className="text-[10px] text-purple-600 font-medium">Pay Rate</p>
@@ -1496,13 +1584,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             </div>
                             <div className="bg-yellow-50 rounded-lg p-2">
                               <p className="text-[10px] text-yellow-600 font-medium">Est. Payout</p>
-                              <p className="text-base font-bold text-yellow-900">
-                                {formatCurrency(
-                                  ((reels.filter(r => r.campaign?.id === c.id)
-                                    .reduce((total, r) => total + (Number(r.views) || 0), 0) / 1_000_000) * (Number(c.pay_rate) || 0)
-                                  )
-                                )}
-                              </p>
+                              <p className="text-base font-bold text-yellow-900">{formatCurrency(c.estimated_payout || 0)}</p>
                             </div>
                           </div>
                           
@@ -1542,6 +1624,14 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                             onClick={() => handleDeleteCampaign(c.id)}
                           >
                             <Trash2 className="h-4 w-4" />
+                          </button>
+                          <button 
+                            className="text-gray-400 hover:text-indigo-600 transition-colors flex items-center justify-center w-8 h-8 p-0" 
+                            title="Send Invoice" 
+                            onClick={() => handleSendInvoice(c.id)}
+                          >
+                            <FileInput className="h-4 w-4" />
+                            <span className="sr-only">Send Invoice</span>
                           </button>
                         </div>
                       </div>
@@ -1658,7 +1748,7 @@ export function AdminDashboard({ currentUser, onLogout }: AdminDashboardProps) {
                 <p className="text-gray-600">Choose a campaign to update all its reels' stats.</p>
               </div>
               <div className="space-y-2">
-                {campaigns.map((c: any) => (
+                {Array.isArray(campaigns) && campaigns.map((c: any) => (
                   <button
                     key={c.id}
                     onClick={() => handleCampaignForceUpdate(c)}

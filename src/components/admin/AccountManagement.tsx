@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { accountService, InstagramAccount } from '../../services/accountService';
 import { Plus, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'sonner';
 
 export const AccountManagement: React.FC = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -73,23 +74,35 @@ export const AccountManagement: React.FC = () => {
   };
 
   const handleRemoveAccount = async (accountId: number) => {
-    if (!confirm('Are you sure you want to remove this account?')) return;
-
-    setError('');
-    setSuccess('');
-
-    try {
-      const result = await accountService.removeAccount(accountId);
+    
+    toast("Remove Account", {
+      description: "Are you sure you want to remove this account?",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          setError('');
+          setSuccess('');
       
-      if (result.success) {
-        setSuccess('Account removed successfully!');
-        loadAccounts(); // Reload accounts
-      } else {
-        setError(result.error || 'Failed to remove account');
-      }
-    } catch (error) {
-      setError('An unexpected error occurred');
-    }
+          try {
+            const result = await accountService.removeAccount(accountId);
+            
+            if (result.success) {
+              toast.success('Account removed successfully!');
+              loadAccounts(); // Reload accounts
+            } else {
+              toast.error(result.error || 'Failed to remove account');
+            }
+          } catch (error) {
+            toast.error('An unexpected error occurred');
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+      
+    });
   };
 
   const getStatusIcon = (account: InstagramAccount) => {
@@ -173,7 +186,8 @@ export const AccountManagement: React.FC = () => {
               <span className="text-xs text-gray-500 mt-1">Enter your Instagram username (with or without @)</span>
               {inputError && <span className="text-xs text-red-600 mt-1">{inputError}</span>}
             </div>
-            <button
+            <div>
+              <button
               type="submit"
               disabled={isAdding || !newAccount.trim()}
               className="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -181,6 +195,7 @@ export const AccountManagement: React.FC = () => {
               <Plus className="h-4 w-4" />
               {isAdding ? 'Adding...' : 'Add Account'}
             </button>
+            </div>
           </form>
         </div>
 

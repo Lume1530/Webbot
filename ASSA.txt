@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice - {{invoiceID}}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 40px;
+            box-sizing: border-box;
+            color: #333;
+            font-size: 14px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-center;
+            margin-bottom: 40px;
+        }
+        .logo-section img {
+            width: 120px; /* Adjust based on your actual logo size */
+            height: auto;
+        }
+        .invoice-details {
+            text-align: left;
+            font-size: 12px;
+            display:flex;
+            flex-direction:column;
+            justify-content: center;
+        }
+        .invoice-details p {
+            margin: 2px 0;
+        }
+        .invoice-id-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .invoice-id-box span:first-child {
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+        .invoice-to {
+            margin-bottom: 30px;
+        }
+        .invoice-to p {
+            margin: 2px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+
+        }
+        table thead {
+            background-color: #000;
+            color: #fff;
+            font-weight: bold;
+
+        }
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+
+        }
+        table th:first-child, table td:first-child { width: 40%; }
+        table th:nth-child(2), table td:nth-child(2) { width: 20%; }
+        table th:nth-child(3), table td:nth-child(3) { width: 20%; }
+        table th:last-child, table td:last-child { width: 20%; text-align: right; }
+
+        table tr:last-child td { border-bottom: none; }
+
+        .summary-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
+        }
+        .summary-label {
+            width: 180px; /* Adjust as needed */
+            text-align: right;
+            font-weight:bold;
+            padding-right: 15px;
+            font-size: 15px;
+        }
+        .summary-value {
+            width: 100px; /* Adjust as needed */
+            text-align: right;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .total-box {
+            display: flex;
+            justify-content: flex-end;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .total-box .summary-label, .total-box .summary-value {
+             font-size: 18px;
+             color: #fff;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 80px;
+            font-size: 12px;
+        }
+        .thank-you {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .signature-section {
+            text-align: right;
+        }
+        .signature-section img {
+            max-width: 150px;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: 0;
+            margin-bottom: 5px;
+        }
+        .company-name-footer {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .invoice{
+            font-size:24px;
+            letter-spacing:3px;
+        }
+        .total{
+            display:flex;
+            justify-content:space-between;
+        }
+        .total-div{
+            flex:1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <img src="https://lh3.googleusercontent.com/d/1o3Uh5lvuy5RSGezOfKLvEOjGydXm-HvX" alt="DLS Group Logo">
+            </div>
+            <div class="invoice-details">
+                <p class='invoice'>INVOICE</p>
+                <p class='invoice-subheading'>Invoice ID: INV-GTCYVBBURYIY</p>
+                <p class='invoice-subheading'>Invoice Date: 28-07-2020 17:30 PM</p>
+            </div>
+        </div>
+
+
+        <div class="invoice-to">
+            <p class="section-title">INVOICE TO:</p>
+            <p>Jinendra@gmail.com</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>PRODUCT</th>
+                    <th>PRICE</th>
+                    <th>VIEWS</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Campaign Name</td>
+                    <td>$25</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Website Maintainance Fee</td>
+                    <td>-4.8%</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Service Tax</td>
+                    <td>-4%</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Currency Conversion</td>
+                    <td>-3.2%</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="summary-row">
+            <div class="summary-label">SUB-TOTAL:</div>
+            <div class="summary-value">$0.00</div>
+        </div>
+         <div class="summary-row">
+            <div class="summary-label">TAX(-12%):</div>
+            <div class="summary-value">$0.00</div>
+        </div>
+
+       <div class='total'>
+           <div class='total-div'></div>
+            <div class="total-box">
+            <div class="summary-label">TOTAL:</div>
+            <div class="summary-value">$0.00</div>
+        </div>
+       </div>
+
+        <div class="footer">
+            <div class="thank-you">Thank You For Your Business</div>
+            <div class="signature-section">
+                <img src="https://lh3.googleusercontent.com/d/1SOWCeboQ4uCdDeBk5zWwurZPfOq-Q5dr=w600-h600" alt="Authorized Signature">
+                <hr/>
+                <p class="company-name-footer">DLS GROUP</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+8114049711
+
+https://drive.google.com/file/d/13zvCt6At22lJ_8-UllXNtQGaEKFM1WZ_/view?usp=sharing
+
+https://drive.google.com/file/d/1o3Uh5lvuy5RSGezOfKLvEOjGydXm-HvX/view?usp=sharing

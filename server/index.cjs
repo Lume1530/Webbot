@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
 const { createCanvas, registerFont } = require('canvas');
 const nodemailer = require('nodemailer');
+const { html } = require('framer-motion/client');
 // RapidAPI configuration
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 
@@ -173,56 +174,317 @@ const requireStaff = (req, res, next) => {
 };
 
 // User Registration
-app.post('/api/register', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+function generateSixDigitOTP() {
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  return otp.toString();
+}
+// --- End of generateSixDigitOTP definition ---
 
-    // Check if username already exists
-    const existingUsername = await pool.query(
-      'SELECT * FROM public.users WHERE username = $1',
-      [username]
+// A utility function to update OTP in the database
+async function updateOtpInDb(userId, otp, expiryMinutes = 5) {
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + expiryMinutes);
+
+    await pool.query(
+        'UPDATE public.users SET otp = $1, otp_expires_at = $2 WHERE id = $3',
+        [otp, expiresAt, userId]
     );
+    return expiresAt;
+}
 
-    if (existingUsername.rows.length > 0) {
-      return res.status(400).json({ error: 'Username already exists. Please choose a different username.' });
+// --- REGISTER API ---
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, email, password, referralCode } = req.body;
+
+        // 1. Check if username already exists
+        // const existingUsername = await pool.query(
+        //     'SELECT * FROM public.users WHERE username = $1',
+        //     [username]
+        // );
+        // if (existingUsername.rows.length > 0) {
+        //     return res.status(400).json({ error: 'Username already exists. Please choose a different username.' });
+        // }
+
+        // 2. Check if email already exists
+        const existingEmail = await pool.query(
+            'SELECT * FROM public.users WHERE email = $1',
+            [email]
+        );
+        if (existingEmail.rows.length > 0) {
+            return res.status(400).json({ error: 'Email already exists. Please use a different email address.' });
+        }
+
+        // 3. Hash password
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        // 4. Create user with is_approved = null (pending)
+        // Note: OTP fields will be null initially, populated after successful user creation
+        const result = await pool.query(
+            'INSERT INTO public.users (username, email, password_hash, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, is_approved, created_at',
+            [username, email, passwordHash, 'user', null]
+        );
+        const newUserId = result.rows[0].id;
+
+        // 5. Generate and update unique referral code
+        const generatedReferralCode = 'user_' + newUserId;
+        await pool.query('UPDATE users SET referral_code = $1 WHERE id = $2', [generatedReferralCode, newUserId]);
+
+        // 6. Handle referral if provided
+        let referrerInfo = null;
+        if (referralCode) {
+            const referrer = await pool.query('SELECT id, username, email FROM users WHERE referral_code = $1', [referralCode]);
+            if (referrer.rows.length > 0) {
+                // Prevent self-referral
+                if (referrer.rows[0].id !== newUserId) {
+                    await pool.query('UPDATE users SET referred_by = $1 WHERE id = $2', [referrer.rows[0].id, newUserId]);
+                }
+            }
+        }
+
+        // 7. Generate OTP and store it with expiry
+        const otp = generateSixDigitOTP();
+
+        // 8. Send OTP email to the newly registered user
+        await sendEmail(email,
+             'DLS Group OTP Verification',
+            '',
+            `<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>DLS Group OTP Verification</title> <style> @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap'); body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: #f4f7fa; color: #333333; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; } .email-container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); border: 1px solid #e0e0e0; } .header { background: linear-gradient(to right, #3b82f6, #06b6d4); padding: 25px; text-align: center; color: #ffffff; border-bottom: 1px solid #0056b3; } .header h2 { margin: 0; font-size: 28px; font-weight: 600; } .content { padding: 30px 40px; text-align: left; line-height: 1.6; } .otp-box { text-align: center; margin: 25px 0; background-color: #eaf6ff; border-radius: 8px; padding: 15px 25px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto; } .otp-box p { font-size: 36px; font-weight: bold; color: #007bff; margin: 0; letter-spacing: 4px; } .action-button { display: inline-block; background: linear-gradient(to right, #3b82f6, #06b6d4); color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); transition: background-color 0.3s ease, transform 0.2s ease; } .action-button:hover { background-color: #0056b3; transform: translateY(-2px); } .footer { background-color: #f0f0f0; padding: 25px 40px; text-align: center; font-size: 14px; color: #777777; border-top: 1px solid #e0e0e0; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; } .footer a { color: #007bff; text-decoration: none; font-weight: 500; } @media(max-width: 600px) { .email-container { margin: 20px 15px; border-radius: 8px; } .header { padding: 20px; } .header h2 { font-size: 24px; } .content { padding: 20px 25px; } .otp-box p { font-size: 30px; } .action-button { padding: 12px 24px; font-size: 16px; } .footer { padding: 20px; } } </style> </head> <body> <div class="email-container"> <div class="header"> <h2>DLS Group</h2> </div> <div class="content"> <p>Dear Creator,</p> <p>To verify your account, please use the One-Time Password(OTP) provided below. For your security, <strong>do not share this OTP with anyone.</strong></p> <div style="text-align: center;"> <div class="otp-box"> <p>${otp}</p> </div> </div> <p>This OTP is valid for 5 minutes. Please use it promptly to complete your registration.</p>  </div> <div class="footer"> <p>Best regards,<br>The DLS Group Team</p> <p style="margin-top: 15px;">&copy; 2025 DLS Group. All rights reserved.</p> </div> </div> </body> </html>`
+        );
+
+        // 9. Notify admins and staff about new user registration
+        const staffAndAdmins = await pool.query('SELECT id FROM public.users WHERE role IN ($1, $2)', ['admin', 'staff']);
+        for (const staff of staffAndAdmins.rows) {
+            await pool.query(
+                'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
+                [staff.id, `New user registration: ${username} (${email}) is awaiting approval and OTP verification.`, 'user_registration']
+            );
+        }
+
+        res.status(201).json({
+            message: 'User registered successfully. An OTP has been sent to your email for verification. Awaiting admin approval after verification.',
+            user: {
+                id: result.rows[0].id,
+                username: result.rows[0].username,
+                email: result.rows[0].email,
+                role: result.rows[0].role,
+                is_approved: result.rows[0].is_approved
+            },
+            referrerInfo
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, otp,password } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email and OTP are required.' });
+        }
+
+        const userResult = await pool.query(
+            'SELECT id, otp, username,email,password_hash,role,otp_expires_at, is_approved FROM public.users WHERE email = $1',
+            [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        const user = userResult.rows[0];
+
+         const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Check if email already exists
-    const existingEmail = await pool.query(
-      'SELECT * FROM public.users WHERE email = $1',
+        // Check if OTP is correct
+        if (user.otp !== otp) {
+            return res.status(400).json({ error: 'Invalid OTP.' });
+        }
+
+        // Check if OTP has expired
+        const currentTime = new Date();
+        if (user.otp_expires_at && currentTime > new Date(user.otp_expires_at)) {
+            // Clear expired OTP from DB for security
+            await pool.query(
+                'UPDATE public.users SET otp = NULL, otp_expires_at = NULL WHERE id = $1',
+                [user.id]
+            );
+            return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+        }
+
+        // If OTP is valid and not expired, clear it and mark user as verified (or ready for admin approval)
+        // Here, we'll mark is_approved to true and keep is_approved as null for admin approval workflow
+        await pool.query(
+            'UPDATE public.users SET otp = NULL, otp_expires_at = NULL, is_approved = TRUE WHERE id = $1 RETURNING is_approved',
+            [user.id]
+        );
+
+        const token = jwt.sign(
+      { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email, 
+        role: user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+
+    res.json({
+      message: 'OTP verified successful',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isApproved:true
+      }
+    });
+
+    } catch (error) {
+        console.error('OTP verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email, otp,password } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email and OTP are required.' });
+        }
+
+        const userResult = await pool.query(
+            'SELECT id, otp, username,email,password_hash,role,otp_expires_at, is_approved FROM public.users WHERE email = $1',
+            [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        const user = userResult.rows[0];
+
+        
+        // Check if OTP is correct
+        if (user.otp !== otp) {
+            return res.status(400).json({ error: 'Invalid OTP.' });
+        }
+
+        // Check if OTP has expired
+        const currentTime = new Date();
+        if (user.otp_expires_at && currentTime > new Date(user.otp_expires_at)) {
+            // Clear expired OTP from DB for security
+            await pool.query(
+                'UPDATE public.users SET otp = NULL, otp_expires_at = NULL WHERE id = $1',
+                [user.id]
+            );
+            return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+        }
+ const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+        // If OTP is valid and not expired, clear it and mark user as verified (or ready for admin approval)
+        // Here, we'll mark is_approved to true and keep is_approved as null for admin approval workflow
+        await pool.query(
+            'UPDATE public.users SET otp = NULL, otp_expires_at = NULL, is_approved = TRUE, password_hash = $2 WHERE id = $1 RETURNING is_approved',
+            [user.id,passwordHash]
+        );
+
+      
+
+    res.json({
+      message: 'Password updated successful',
+      
+    });
+
+    } catch (error) {
+        console.error('Password update error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// --- RESEND OTP API ---
+app.post('/api/resend-otp', async (req, res) => {
+    try {
+        const { email,password } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' });
+        }
+
+        const userResult = await pool.query(
+            'SELECT id, email, is_approved,password_hash FROM public.users WHERE email = $1',
+            [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+
+        const user = userResult.rows[0];
+
+    //     const validPassword = await bcrypt.compare(password, user.password_hash);
+    // if (!validPassword) {
+    //   return res.status(401).json({ error: 'Invalid credentials' });
+    // }
+
+    //     // Prevent resending OTP if email is already verified
+    //     if (user.is_approved) {
+    //         return res.status(400).json({ message: 'Email is already verified.' });
+    //     }
+
+        // Generate new OTP and store it with expiry
+        const otp = generateSixDigitOTP();
+        const otpExpiresAt = await updateOtpInDb(user.id, otp);
+
+        // Send new OTP email
+        await sendEmail(user.email,
+            'DLS Group OTP Verification (Resend)',
+           '',
+            `<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>DLS Group OTP Verification</title> <style> @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap'); body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: #f4f7fa; color: #333333; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; } .email-container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); border: 1px solid #e0e0e0; } .header { background: linear-gradient(to right, #3b82f6, #06b6d4); padding: 25px; text-align: center; color: #ffffff; border-bottom: 1px solid #0056b3; } .header h2 { margin: 0; font-size: 28px; font-weight: 600; } .content { padding: 30px 40px; text-align: left; line-height: 1.6; } .otp-box { text-align: center; margin: 25px 0; background-color: #eaf6ff; border-radius: 8px; padding: 15px 25px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto; } .otp-box p { font-size: 36px; font-weight: bold; color: #007bff; margin: 0; letter-spacing: 4px; } .action-button { display: inline-block; background: linear-gradient(to right, #3b82f6, #06b6d4); color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; margin: 20px 0; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3); transition: background-color 0.3s ease, transform 0.2s ease; } .action-button:hover { background-color: #0056b3; transform: translateY(-2px); } .footer { background-color: #f0f0f0; padding: 25px 40px; text-align: center; font-size: 14px; color: #777777; border-top: 1px solid #e0e0e0; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; } .footer a { color: #007bff; text-decoration: none; font-weight: 500; } @media(max-width: 600px) { .email-container { margin: 20px 15px; border-radius: 8px; } .header { padding: 20px; } .header h2 { font-size: 24px; } .content { padding: 20px 25px; } .otp-box p { font-size: 30px; } .action-button { padding: 12px 24px; font-size: 16px; } .footer { padding: 20px; } } </style> </head> <body> <div class="email-container"> <div class="header"> <h2>DLS Group</h2> </div> <div class="content"> <p>Dear Creator,</p> <p>You have requested a new One-Time Password(OTP) for your DLS Group account. Please use the OTP provided below to verify your account. For your security, <strong>do not share this OTP with anyone.</strong></p> <div style="text-align: center;"> <div class="otp-box"> <p>${otp}</p> </div> </div> <p>This OTP is valid for 5 minutes. Please use it promptly to complete your verification.</p>  </div> <div class="footer"> <p>Best regards,<br>The DLS Group Team</p> <p style="margin-top: 15px;">&copy; 2025 DLS Group. All rights reserved.</p> </div> </div> </body> </html>`
+        );
+
+        res.status(200).json({ message: 'New OTP sent to your email.' });
+
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+// User Login
+app.get('/api/check-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    // Find user
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
       [email]
     );
 
-    if (existingEmail.rows.length > 0) {
-      return res.status(400).json({ error: 'Email already exists. Please use a different email address.' });
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    // Create user with is_approved = null (pending)
-    const result = await pool.query(
-      'INSERT INTO public.users (username, email, password_hash, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, is_approved, created_at',
-      [username, email, passwordHash, 'user', null]
-    );
-
-    // Notify all admins and staff about new user registration
-    const staffAndAdmins = await pool.query('SELECT id FROM public.users WHERE role IN ($1, $2)', ['admin', 'staff']);
-    for (const staff of staffAndAdmins.rows) {
-      await pool.query(
-        'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
-        [staff.id, `New user registration: ${username} (${email}) is awaiting approval.`, 'user_registration']
-      );
-    }
-
-    res.status(201).json({
-      message: 'User registered successfully. Awaiting admin approval.',
-      user: result.rows[0]
+    res.json({
+      message: 'Check Email Exist',
+      user: {
+        user_exist: result.rows.length > 0,
+        isApproved: result.rows.length > 0 ? result.rows[0].is_approved : null,
+      },
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Email check error:', error);
+    res.status(500).json({ error: 'Failed to get email details' });
   }
 });
 
@@ -872,7 +1134,7 @@ app.get('/api/reels', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const result = await pool.query(`
-      SELECT r.*, c.name as campaign_name, c.pay_rate as campaign_pay_rate, c.description as campaign_description, c.status as campaign_status
+      SELECT r.*,r.isActive as "isActive", c.name as campaign_name, c.pay_rate as campaign_pay_rate, c.description as campaign_description, c.status as campaign_status
       FROM reels r
       LEFT JOIN campaigns c ON r.campaign_id = c.id
       WHERE r.userId = $1 AND (r.is_dummy = false OR r.is_dummy IS NULL)
@@ -1828,7 +2090,8 @@ app.listen(PORT, HOST, () => {
 
 app.post('/api/send-support-mail', async (req, res) => {
   try {
-    const { name, email, contact, message } = req.body;
+        const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
+
     const transporter = nodemailer.createTransport({
       service: 'gmail', // Change if using another provider
       auth: {
@@ -1837,14 +2100,98 @@ app.post('/api/send-support-mail', async (req, res) => {
       },
     });
 
-    const mailOptions = {
-      from: process.env.SMTP_USER,
-      to: process.env.SUPPORT_EMAIL,
-      subject: 'New Partner With Us Submission',
-      text: `Name: ${name}\nEmail: ${email}\nContact: ${contact}\nMessage: ${message}`,
-    };
+     let subject = 'New Contact Form Submission';
+    let emailTextContent = `
+      Name: ${name}
+      Email: ${email}
+      Contact Number: ${contact}
+      Message: ${message || 'N/A'}
+    `;
+    let htmlEmailContent = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #f4f4f4; padding: 20px; text-align: center; border-bottom: 1px solid #ddd;">
+          <h2 style="color: #333;">New Message from Contact Form</h2>
+        </div>
+        <div style="padding: 20px;">
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Contact Number:</strong> ${contact}</p>
+          <p><strong>Message:</strong> ${message || 'N/A'}</p>
+        </div>
+        <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 0.8em; color: #777; border-top: 1px solid #ddd;">
+          This is an automated email, please do not reply directly.
+        </div>
+      </div>
+    `;
 
-    await transporter.sendMail(mailOptions);
+
+    if (date && time && timezone) {
+      subject = 'New Appointment Schedule Request';
+      emailTextContent = `
+        Appointment Request:
+        Name: ${name}
+        Email: ${email}
+        Contact Number: ${contact}
+        Preferred Date: ${date}
+        Preferred Time: ${time}
+        Timezone: ${timezone}
+        Message: ${message || 'N/A'}
+      `;
+      htmlEmailContent = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #4CAF50; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <div style="background-color: #4CAF50; padding: 20px; text-align: center; border-bottom: 1px solid #45a049;">
+            <h2 style="color: #fff; margin: 0;">Appointment Schedule Request</h2>
+          </div>
+          <div style="padding: 20px; background-color: #fff;">
+            <p style="font-size: 1.1em; margin-bottom: 15px;">A new appointment has been requested with the following details:</p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 30%;">Name:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Email:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><a href="mailto:${email}" style="color: #007BFF; text-decoration: none;">${email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Contact Number:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${contact}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Preferred Date:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${date}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Preferred Time:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${time}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Timezone:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${timezone}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; vertical-align: top;">Message:</td>
+                <td style="padding: 8px 0;">${message || 'N/A'}</td>
+              </tr>
+            </table>
+          </div>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 0.8em; color: #777; border-top: 1px solid #ddd;">
+            This is an automated email, please do not reply directly.
+          </div>
+        </div>
+      `;
+    }
+
+    // Send mail to admin's email
+    await transporter.sendMail({
+     from: process.env.SMTP_USER,
+      to: process.env.SUPPORT_EMAIL,
+      subject: subject,
+      text: emailTextContent,
+      html: htmlEmailContent,
+    });
+
+    
     res.json({ success: true, message: 'Support mail sent successfully.' });
   } catch (error) {
     console.error('Support mail error:', error);
@@ -1945,3 +2292,630 @@ app.post('/api/admin/campaigns/:id/force-update', authenticateToken, requireAdmi
     }
   }
 });
+
+// Referral stats endpoint
+app.get('/api/referrals', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // Get referred users and their campaign-wise earned/claimed amounts
+    const referredUsersQuery = `
+      SELECT
+          u.id AS referred_user_id,
+          u.username,
+          u.email,
+          u.created_at AS created_at,
+          u.is_approved AS referred_user_is_approved,
+          SUM(CASE WHEN re.status = 'pending' THEN re.earned_amount ELSE 0 END) AS total_earned_from_campaigns,
+SUM(CASE WHEN re.status = 'approved' THEN re.claimed_amount ELSE 0 END) AS total_claimed_from_campaigns
+      FROM users u
+      JOIN referral_earnings re ON re.referred_id = u.id
+      WHERE re.referrer_id = $1
+      GROUP BY u.id, u.username, u.email, u.created_at, u.is_approved
+      ORDER BY u.created_at DESC;
+    `;
+    const referredUsersResult = await pool.query(referredUsersQuery, [userId]);
+
+    // Calculate total claimed money and pending overall money from all referred users
+    const overallReferralSummaryQuery = `
+      SELECT
+          SUM(CASE WHEN re.status = 'pending' THEN re.earned_amount ELSE 0 END) AS total_earned_from_campaigns,
+SUM(CASE WHEN re.status = 'approved' THEN re.claimed_amount ELSE 0 END) AS total_claimed_from_campaigns
+      FROM referral_earnings re
+      WHERE re.referrer_id = $1 GROUP BY re.referrer_id;
+    `;
+    const overallSummaryResult = await pool.query(overallReferralSummaryQuery,[userId]);
+
+    // Get the referral code for the current user
+    const referralCodeResult = await pool.query('SELECT referral_code FROM users WHERE id = $1', [userId]);
+
+    res.json({
+      referralCode: referralCodeResult.rows[0]?.referral_code,
+      totalReferredUsers: Number(referredUsersResult.rows?.length || 0),
+      totalEarningsAllTime: Number(overallSummaryResult.rows[0]?.total_earned_from_campaigns || 0),
+      totalClaimedOverall: Number(overallSummaryResult.rows[0]?.total_claimed_from_campaigns || 0),
+      referredUsers: referredUsersResult.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching referral data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/referral-claims', authenticateToken, async (req, res) => {
+  const referrerId = req.user.id; // The user making the claim request
+
+  try {
+    // 1. Calculate the total unclaimed earnings for the referrer
+    const unclaimedEarningsResult = await pool.query(`
+      SELECT
+          SUM(CASE WHEN re.status = 'pending' THEN re.earned_amount ELSE 0 END) AS total_earned_from_campaigns,
+SUM(CASE WHEN re.status = 'approved' THEN re.claimed_amount ELSE 0 END) AS total_claimed_from_campaigns
+      FROM referral_earnings re 
+      WHERE re.referrer_id = $1 GROUP BY re.referrer_id;
+    `, [referrerId]);
+
+    const unclaimedAmount = Number(unclaimedEarningsResult.rows[0]?.total_earned_from_campaigns || 0);
+
+    if (unclaimedAmount <= 100) {
+      return res.status(400).json({ message: 'Unclaimed earning is less than $100. You can not claim it.' });
+    }
+
+    // 2. Check for existing pending claims to prevent duplicates
+    const existingPendingClaim = await pool.query(`
+      SELECT id FROM referral_claims
+      WHERE referrer_id = $1 AND status = 'pending';
+    `, [referrerId]);
+
+    if (existingPendingClaim.rows.length > 0) {
+      return res.status(409).json({ message: 'You already have a pending claim request.' });
+    }
+
+    // 3. Insert a new referral claim request
+    const newClaim = await pool.query(`
+      INSERT INTO referral_claims (referrer_id, status, request_date)
+      VALUES ($1, 'pending', NOW())
+      RETURNING id, request_date;
+    `, [referrerId]);
+
+    res.status(201).json({
+      message: 'Referral claim request submitted successfully.',
+      claimId: newClaim.rows[0].id,
+      requestDate: newClaim.rows[0].request_date,
+      requestedAmount: unclaimedAmount // Inform the user about the amount for which the request was made
+    });
+
+  } catch (error) {
+    console.error('Error submitting referral claim request:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/referral-claims', authenticateToken, async (req, res) => {
+  try {
+    const claims = await pool.query(`
+      SELECT
+          rc.id,
+          rc.referrer_id,
+          u.username AS referrer_username,
+          u.email AS referrer_email,
+          rc.status,
+          rc.request_date,
+          rc.approval_date,
+          rc.rejection_reason,
+          au.username AS approved_by_username 
+      FROM referral_claims rc
+      JOIN users u ON rc.referrer_id = u.id
+      JOIN referral_earnings re ON re.referrer_id = rc.referrer_id AND rc.status = 'pending'
+      ORDER BY rc.request_date DESC;
+    `);
+
+    res.json({
+      allClaimRequests: claims.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching all referral claim requests:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+app.post('/api/admin/referral-claims/:id', authenticateToken, async (req, res) => {
+  const claimId = req.params.id;
+  const { status, rejectionReason } = req.body; // status can be 'approved' or 'rejected'
+  const approvedBy = req.user.id; // The admin/staff user approving/rejecting
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ message: 'Invalid status provided. Must be "approved" or "rejected".' });
+  }
+
+  const client = await pool.connect(); // Use a client for transaction
+  try {
+    await client.query('BEGIN'); // Start transaction
+
+    // 1. Fetch the existing claim to ensure it's pending
+    const existingClaimResult = await client.query(`
+      SELECT referrer_id, status FROM referral_claims WHERE id = $1 FOR UPDATE;
+    `, [claimId]); // FOR UPDATE locks the row
+
+    if (existingClaimResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Referral claim not found.' });
+    }
+
+    const existingClaim = existingClaimResult.rows[0];
+    if (existingClaim.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: `Claim is already ${existingClaim.status}. Cannot update.` });
+    }
+
+    // 2. Update the referral claim status
+    let updateQuery;
+    let queryParams;
+
+    if (status === 'approved') {
+      updateQuery = `
+        UPDATE referral_claims
+        SET status = 'approved', approval_date = NOW(), approved_by = $2, rejection_reason = NULL
+        WHERE id = $1
+        RETURNING *;
+      `;
+      queryParams = [claimId, approvedBy];
+    } else {
+      if (!rejectionReason || rejectionReason.trim() === '') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'Rejection reason is required for rejected claims.' });
+      }
+      updateQuery = `
+        UPDATE referral_claims
+        SET status = 'rejected', approval_date = NOW(), approved_by = $2, rejection_reason = $3
+        WHERE id = $1
+        RETURNING *;
+      `;
+      queryParams = [claimId, approvedBy, rejectionReason];
+    }
+
+    const updatedClaimResult = await client.query(updateQuery, queryParams);
+    const updatedClaim = updatedClaimResult.rows[0];
+
+    if (status === 'approved') {
+      await client.query(`
+        UPDATE referral_earnings
+        SET claimed_amount = earned_amount
+        WHERE referrer_id = $1 AND claimed_amount < earned_amount and status= $2;
+      `, [existingClaim.referrer_id,'pending']);
+
+    }
+
+    await client.query('COMMIT');
+    res.json({
+      message: `Referral claim ${status} successfully.`,
+      updatedClaim: updatedClaim
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK'); 
+    console.error('Error updating referral claim status:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
+
+const formatDateTime=(date)=> {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = String(hours).padStart(2, '0');
+
+  return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+}
+
+const sendEmail = async (to, subject, text, html) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: to,
+      subject: subject,
+      html: html,
+    };
+    if(text) {
+      mailOptions.text = text;
+    }
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Mail error:', error);
+  }
+
+  
+}
+
+
+
+app.post('/api/admin/send-campaign-earnings-emails', async (req, res) => { 
+  try { 
+    const MIN_VIEWS_REQUIRED = 1000000; // 1 Million views
+    const {id}=req.body;
+
+    // 1. Get all active campaigns with their per_1m_views_price
+    const campaignsResult = await pool.query('SELECT id, name, pay_rate as per_1m_views_price FROM campaigns WHERE status = $1 AND id = $2', ['active',id]); 
+    const campaigns = campaignsResult.rows; 
+
+    if (campaigns.length === 0) { 
+      return res.status(200).json({ message: 'No active campaigns with earnings configured.' }); 
+    }
+
+    let emailsSentCount = 0; 
+    let usersProcessed = new Set(); // To track users already processed to avoid duplicate emails
+
+    for (const campaign of campaigns) { 
+      // 2. Get users who submitted reels for this campaign and their total views
+      const usersReelViewsResult = await pool.query( 
+        `SELECT r.userId, SUM(r.views) AS total_views, u.email, u.username,u.id,u.referred_by
+         FROM reels r
+         JOIN public.users u ON r.userId = u.id
+         WHERE r.campaign_id = $1 AND (r.is_dummy = false OR r.is_dummy IS NULL)
+         GROUP BY r.userId, u.email, u.username, u.id
+         HAVING SUM(r.views) >= $2`,
+        [campaign.id, MIN_VIEWS_REQUIRED]
+      ); 
+
+      const eligibleUsers = usersReelViewsResult.rows; 
+
+      if (eligibleUsers.length === 0) { 
+        console.log(`No users met the minimum view requirement for campaign: ${campaign.name}`); 
+        continue; 
+      }
+
+      for (const user of eligibleUsers) { 
+        if (usersProcessed.has(user.email)) { 
+            console.log(`User ${user.email} already processed for another campaign in this batch. Skipping.`); 
+            continue; 
+        }
+
+        const totalViews = parseInt(user.total_views, 10); 
+        // Calculate earnings: (total views / 1,000,000) * per_1m_views_price
+        const earnedAmount = (totalViews / MIN_VIEWS_REQUIRED) * parseFloat(campaign.per_1m_views_price); 
+
+        const twelvePercent = earnedAmount * 0.12;
+
+
+        if (user.referred_by) {
+          const eightPercentReferral = earnedAmount * 0.08;
+
+          try {
+            await pool.query(
+              `INSERT INTO referral_earnings (referrer_id, referred_id, created_at, earned_amount, claimed_amount, campaign_id)
+               VALUES ($1, $2, NOW(), $3, 0, $4)`, 
+              [user.referred_by, user.id, eightPercentReferral, campaign.id]
+            );
+            } catch (referralError) {
+            console.error(`Error adding referral earning for referrer ${user.referrerId}:`, referralError);
+          }
+        }
+
+        try { 
+          await sendEmail(user.email,`Campaign Earnings Invoice For: ${campaign.name}`,'',`<!DOCTYPE html>
+<html>
+<head>
+  <title>Campaign Earnings Invoice</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <style type="text/css">
+    /* CLIENT-SPECIFIC STYLES */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+
+    /* RESET STYLES */
+    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    table { border-collapse: collapse !important; }
+    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+
+    /* iOS BLUE LINKS */
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+
+    /* Universal styles for consistent appearance */
+    body {
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      font-size: 14px;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px; /* Reduced max-width for better mobile fit */
+      margin: 0 auto;
+      background-color: #ffffff; /* Added background for clarity */
+    }
+    .header-table {
+        width: 100%;
+        padding: 20px; /* Added padding to header cells instead of container */
+    }
+    .logo-section img {
+        width: 100px; /* Adjusted size */
+        height: auto;
+        display: block; /* Important for alignment */
+    }
+    .invoice-details {
+        text-align: right; /* Align right for desktop, will stack on mobile */
+        font-size: 12px;
+    }
+    .invoice-details p {
+        margin: 2px 0;
+    }
+    .invoice-title {
+        font-size: 24px;
+        letter-spacing: 3px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .section-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 15px;
+    }
+    .invoice-to-table {
+        width: 100%;
+        margin-bottom: 20px;
+        padding: 0 20px; /* Added padding */
+    }
+    .invoice-to-content p {
+        margin: 2px 0;
+    }
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background-color: #ffffff;
+    }
+    .items-table thead {
+        background-color: #000;
+        color: #fff;
+    }
+    .items-table th, .items-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    .items-table th.align-right, .items-table td.align-right {
+        text-align: right;
+    }
+    .items-table tr:last-child td { border-bottom: none; }
+
+    .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        padding: 0 20px; /* Added padding */
+    }
+    .summary-table td {
+        padding: 5px 0;
+        font-size: 15px;
+        text-align: right;
+    }
+    .summary-label {
+        font-weight: bold;
+        padding-right: 15px;
+    }
+    .total-row td {
+        background-color: #000;
+        color: #fff;
+        font-weight: bold;
+        font-size: 18px;
+        padding: 10px 20px; /* Increased padding for total */
+    }
+    .footer-table {
+        width: 100%;
+        margin-top: 40px;
+        padding: 0 20px; /* Added padding */
+    }
+    .thank-you {
+        font-weight: 500;
+        font-size: 16px;
+    }
+    .signature-section {
+        text-align: right;
+    }
+    .signature-section img {
+        max-width: 120px; /* Adjusted size */
+        height: auto;
+        display: block;
+        margin-left: auto;
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+    .company-name-footer {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    /* Mobile specific styles */
+    @media screen and (max-width: 525px) {
+      .container {
+        width: 100% !important;
+        padding: 10px !important; /* Adjust padding for smaller screens */
+      }
+      .header-table td {
+          display: block !important;
+          width: 100% !important;
+          text-align: center !important;
+      }
+      .invoice-details {
+          text-align: center !important;
+          margin-top: 20px;
+      }
+      .items-table th, .items-table td {
+          padding: 8px 10px !important;
+      }
+      /* Stack summary and total on small screens */
+      .summary-table, .total-row {
+          width: 100% !important;
+      }
+      .summary-table td, .total-row td {
+          display: block !important;
+          width: 100% !important;
+          text-align: center !important;
+      }
+      .summary-label {
+          padding-right: 0 !important;
+          margin-bottom: 5px;
+      }
+      .footer-table td {
+          display: block !important;
+          width: 100% !important;
+          text-align: center !important;
+      }
+      .signature-section {
+          text-align: center !important;
+          margin-top: 30px;
+      }
+      .signature-section img {
+          margin-left: auto !important;
+          margin-right: auto !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f4f4f4;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" class="container" style="max-width: 600px; background-color: #ffffff;">
+          <tr>
+            <td style="padding: 20px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="header-table">
+                <tr>
+                  <td class="logo-section" valign="top" style="width: 50%; padding-right: 10px;">
+                    <img src="https://lh3.googleusercontent.com/d/1o3Uh5lvuy5RSGezOfKLvEOjGydXm-HvX" alt="DLS Group Logo" style="display: block; width: 100px; max-width: 100px; height: auto;">
+                  </td>
+                  <td class="invoice-details" valign="top" style="width: 50%; text-align: right;">
+                    <p class="invoice-title">INVOICE</p>
+                    <p class="invoice-subheading">Invoice ID: INV-DLS${campaign.id}INV${user.id}</p>
+                    <p class="invoice-subheading">Invoice Date: ${formatDateTime(new Date())}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="invoice-to-table">
+                <tr>
+                  <td class="invoice-to-content" style="padding-top: 20px;">
+                    <p class="section-title">INVOICE TO:</p>
+                    <p>${user.email}</p> </td>
+                </tr>
+              </table>
+
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="items-table">
+                <thead>
+                  <tr>
+                    <th style="padding: 12px 15px; background-color: #000; color: #fff; text-align: left;">PRODUCT</th>
+                    <th style="padding: 12px 15px; background-color: #000; color: #fff; text-align: left;">PRICE</th>
+                    <th style="padding: 12px 15px; background-color: #000; color: #fff; text-align: left;">VIEWS</th>
+                    <th class="align-right" style="padding: 12px 15px; background-color: #000; color: #fff; text-align: right;">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">${campaign.name}</td>
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">$${parseFloat(campaign.per_1m_views_price).toFixed(2)} / M Views</td>
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #eee;">${user.total_views.toLocaleString()}</td>
+                    <td class="align-right" style="padding: 12px 15px; border-bottom: 1px solid #eee;">$${earnedAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                      <td  style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">Website Maintenance Fee </td>
+                      <td>-4.8%</td>
+                      <td></td>
+                      <td class="align-right" style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">-$${(earnedAmount * 0.048).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                      <td style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">Service Tax </td>
+                       <td>-4%</td>
+                      <td></td>
+                      <td class="align-right" style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">-$${(earnedAmount * 0.04).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                      <td style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">Currency Conversion Fee </td>
+                       <td>-3.2%</td>
+                      <td></td>
+                      <td class="align-right" style="padding: 5px 15px; border-bottom: 1px solid #eee; font-size: 12px;">-$${(earnedAmount * 0.032).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="summary-table">
+                <tr>
+                  <td class="summary-label" style="text-align: right; font-weight: bold; padding-right: 15px;">SUB-TOTAL:</td>
+                  <td class="summary-value" style="text-align: right; font-weight: bold;">$${earnedAmount.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="summary-label" style="text-align: right; font-weight: bold; padding-right: 15px;">TOTAL DEDUCTIONS (-12%):</td>
+                  <td class="summary-value" style="text-align: right; font-weight: bold;">-$${twelvePercent.toFixed(2)}</td>
+                </tr>
+                <tr class="total-row">
+                  <td class="summary-label" style="background-color: #000; color: #fff; font-weight: bold; font-size: 18px; padding: 10px 20px;">TOTAL PAYABLE:</td>
+                  <td class="summary-value" style="background-color: #000; color: #fff; font-weight: bold; font-size: 18px; padding: 10px 20px;">$${(earnedAmount - twelvePercent).toFixed(2)}</td>
+                </tr>
+              </table>
+
+
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="footer-table">
+                <tr>
+                  <td valign="bottom" style="width: 50%; padding-right: 10px;">
+                    <p class="thank-you" style="font-weight: 500; font-size: 16px;">Thank You For Your Business</p>
+                  </td>
+                  <td class="signature-section" valign="bottom" style="width: 50%; text-align: right;">
+                    <img src="https://lh3.googleusercontent.com/d/1SOWCeboQ4uCdDeBk5zWwurZPfOq-Q5dr=w600-h600" alt="Authorized Signature" style="max-width: 120px; height: auto; display: block; margin-left: auto; margin-right: 0; margin-bottom: 5px;">
+                    <hr style="border: none; border-top: 1px solid #333; margin: 0 0 5px 0;">
+                    <p class="company-name-footer" style="font-weight: bold; font-size: 14px;">DLS GROUP</p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+        </td>
+    </tr>
+  </table>
+</body>
+</html>`); 
+          console.log(`Email sent successfully to ${user.email} for campaign ${campaign.name}. Earned: $${earnedAmount.toFixed(2)}`); 
+          emailsSentCount++; 
+          usersProcessed.add(user.email); 
+        } catch (mailError) { 
+          console.error(`Failed to send email to ${user.email} for campaign ${campaign.name}:`, mailError); 
+        }
+      }
+    }
+
+    res.json({ success: true, message: `Successfully processed and sent ${emailsSentCount} earning reports.` }); 
+
+  } catch (error) {
+    console.error('Error sending campaign earnings emails:', error); 
+    res.status(500).json({ success: false, message: 'Failed to send campaign earnings emails.', error: error.message }); 
+  }
+});
+

@@ -102,6 +102,51 @@ class NotificationService {
       return 0;
     }
   }
+
+  async sendInvoiceMail(id:number): Promise<number> {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/admin/send-campaign-earnings-emails`, {
+        method:'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+
+        },
+        body: JSON.stringify({id}),
+      });
+      console.log(response)
+      if (!response.ok) {
+        throw new Error('Failed to fetch unread count');
+      }
+      
+      const data = await response.json();
+      return data.count || 0;
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      throw new Error('Failed to fetch unread count');
+    }
+  }
+
+
+  async sendSupportMail(data:any): Promise<any> {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/send-support-mail`, {
+        method:'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+
+        },
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      throw new Error('Failed to fetch unread count');
+    }
+  }
 }
 
 export const notificationService = new NotificationService(); 
