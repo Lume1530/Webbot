@@ -2090,7 +2090,9 @@ app.post('/api/send-support-mail', async (req, res) => {
         const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Change if using another provider
+      host: 'smtpout.secureserver.net',
+      port: 465,
+      secure: true, // true for port 465, false for 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2518,7 +2520,9 @@ const formatDateTime=(date)=> {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtpout.secureserver.net',
+      port: 465,
+      secure: true, // true for port 465, false for 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
