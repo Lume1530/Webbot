@@ -16,6 +16,7 @@ export interface User {
     upi?: string;
     telegram?: string;
   };
+  first_time?:boolean;
 }
 
 export interface Campaign {

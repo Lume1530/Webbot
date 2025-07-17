@@ -937,7 +937,7 @@ function App() {
       });
       if (result.success) {
         const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+        setUser({...currentUser,first_time:true});
         return { success: true };
       } else {
         return { success: false, error: result.error };

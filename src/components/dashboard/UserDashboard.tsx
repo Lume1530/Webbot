@@ -50,7 +50,7 @@ const UserIcon = () => (
 export function UserDashboard(props: UserDashboardProps) {
   const { user, onUpdateUser, onLogout } = props;
   const [reels, setReels] = useState<Reel[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'reels' | 'submit' | 'accounts' | 'profile' | 'campaigns'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'reels' | 'submit' | 'accounts' | 'profile' | 'campaigns'>(props?.user?.first_time==true?'profile':'dashboard');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitUrl, setSubmitUrl] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -486,9 +486,9 @@ export function UserDashboard(props: UserDashboardProps) {
       {/* Refer Modal */}
       {showReferModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl shadow-2xl relative">
+          <div className="bg-white rounded-lg p-4 sm:p-8 w-full max-w-2xl shadow-2xl relative">
             <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-light" onClick={() => setShowReferModal(false)}>✕</button>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Refer & Earn</h2>
+            <h2 className="text-3xl w-full font-semibold mb-6 text-gray-800 text-center">Refer & Earn</h2>
             {referralLoading && <div className="mb-4 text-center text-indigo-600 font-medium flex w-full justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>}
             {referralError && <div className="mb-4 text-center text-red-600 font-medium">{referralError}</div>}
             {referralData && (
@@ -496,35 +496,35 @@ export function UserDashboard(props: UserDashboardProps) {
                 <div className="mb-6">
                   <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="referralLink">Your Referral Link:</label>
                   <div className="flex rounded-lg shadow-sm overflow-hidden">
-                    <input
-                      id="referralLink"
-                      className="flex-1 border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      value={`${window.location.origin}/register?ref=${referralData.referralCode}`}
-                      readOnly
-                    />
-                    <button
-                      className=" px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/register?ref=${referralData.referralCode}`);
-                        toast.success('Referral link copied to clipboard!');
-                      }}
-                    >
-                      Copy
-                    </button>
-                  </div>
+  <input
+    id="referralLink"
+    className="border border-gray-300 px-4 py-2 flex-1 min-w-20 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    value={`${window.location.origin}/register?ref=${referralData.referralCode}`}
+    readOnly
+  />
+  <button
+    className="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
+    onClick={() => {
+      navigator.clipboard.writeText(`${window.location.origin}/register?ref=${referralData.referralCode}`);
+      toast.success('Referral link copied to clipboard!');
+    }}
+  >
+    Copy
+  </button>
+</div>
                 </div>
                 <div className="mb-6 flex justify-around items-center p-4 rounded-lg shadow-inner bg-gradient-to-r from-blue-500 to-cyan-500  text-white shadow-lg">
-                  <div className="text-center">
-                    <div className="text-white text-lg">Total Referred</div>
-                    <div className="font-bold text-2xl text-white">{referralData.totalReferredUsers}</div>
+                  <div className="text-center flex flex-col justify-center items-center">
+                    <div className="text-white text-xs sm:text-lg">Total Referred</div>
+                    <div className="font-bold text-sm sm:text-2xl text-white">{referralData.totalReferredUsers}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-white text-lg">Total Earned</div>
-                    <div className="font-bold text-2xl text-white flex items-center gap-1"><CircleDollarSign className='size-6 text-yellow-300 mt-0.5'/>{referralData.totalClaimedOverall}</div>
+                  <div className="text-center flex flex-col justify-center items-center">
+                    <div className="text-white text-xs sm:text-lg">Total Earned</div>
+                    <div className="font-bold text-sm sm:text-2xl text-white flex items-center gap-1"><CircleDollarSign className='size-6 text-yellow-300 mt-0.5'/>{referralData.totalClaimedOverall}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-white text-lg">Claim</div>
-                    <div className="font-bold text-2xl text-white flex items-center gap-1"><CircleDollarSign className='size-6 text-yellow-300 mt-0.5'/>{referralData.totalEarningsAllTime}</div>
+                  <div className="text-center flex flex-col justify-center items-center">
+                    <div className="text-white text-xs sm:text-lg">Claim</div>
+                    <div className="font-bold text-sm sm:text-2xl text-white flex items-center gap-1"><CircleDollarSign className='size-6 text-yellow-300 mt-0.5'/>{referralData.totalEarningsAllTime}</div>
                   </div>
                 </div>
                 

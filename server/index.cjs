@@ -2087,13 +2087,12 @@ app.listen(PORT, HOST, () => {
 
 app.post('/api/send-support-mail', async (req, res) => {
   try {
-    const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
+        const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
 
-    // GoDaddy SMTP config
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.secureserver.net',
-      port: 587, // Changed from 465 to 587
-      secure: false, // 587 uses STARTTLS, not SSL
+        const transporter = nodemailer.createTransport({
+      host: 'smtpout.secureserver.net', 
+      port: 587,                      
+      secure: false,                  
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2521,9 +2520,9 @@ const formatDateTime=(date)=> {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.secureserver.net',
-      port: 587, // Changed from 465 to 587
-      secure: false, // 587 uses STARTTLS, not SSL
+      host: 'smtpout.secureserver.net', 
+      port: 587,                      
+      secure: false,                  
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
