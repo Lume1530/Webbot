@@ -2087,10 +2087,13 @@ app.listen(PORT, HOST, () => {
 
 app.post('/api/send-support-mail', async (req, res) => {
   try {
-        const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
+    const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
 
+    // GoDaddy SMTP config
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Change if using another provider
+      host: 'smtp.secureserver.net',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2518,7 +2521,9 @@ const formatDateTime=(date)=> {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.secureserver.net',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
