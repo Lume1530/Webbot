@@ -530,9 +530,13 @@ export function UserDashboard(props: UserDashboardProps) {
                 
                 <div className='mb-2'>
                   <button
-                  disabled={referralData.totalEarningsAllTime<100 || claimLoading}
+                  disabled={claimLoading}
                       className=" px-5 rounded-md py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
                       onClick={async () => {
+                        if(referralData.totalEarningsAllTime<100){
+                          toast.error('You can only claim when earnings are more than $100');
+                          return;
+                        }
                         setClaimLoading(true);
                     try {
                        await accountService.claimReferal();

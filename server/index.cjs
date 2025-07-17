@@ -703,7 +703,7 @@ app.post('/api/admin/accounts/:id/approve', authenticateToken, requireStaff, asy
     // Notify user
     await pool.query(
       'INSERT INTO notifications (user_id, message, type, created_at) VALUES ($1, $2, $3, NOW())',
-      [account.user_id, `Your Instagram account @${account.username} has been approved by ${approverRole}!`, 'instagram_approved']
+      [account.user_id, `YOur page has successfully been linked to DLS Creator Dashboard.`, 'instagram_approved']
     );
 
     // Notify all admins and staff (except the approver)
@@ -2090,9 +2090,7 @@ app.post('/api/send-support-mail', async (req, res) => {
         const { name, email, contact, message, date, time, timezone } = req.body; // Added new fields
 
     const transporter = nodemailer.createTransport({
-      host: 'smtpout.secureserver.net',
-      port: 465,
-      secure: true, // true for port 465, false for 587
+      service: 'gmail', // Change if using another provider
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2308,8 +2306,8 @@ app.get('/api/referrals', authenticateToken, async (req, res) => {
           SUM(CASE WHEN re.status = 'pending' THEN re.earned_amount ELSE 0 END) AS total_earned_from_campaigns,
 SUM(CASE WHEN re.status = 'approved' THEN re.claimed_amount ELSE 0 END) AS total_claimed_from_campaigns
       FROM users u
-      JOIN referral_earnings re ON re.referred_id = u.id
-      WHERE re.referrer_id = $1
+        LEFT JOIN referral_earnings re ON re.referred_id = u.id
+      WHERE u.referred_by = $1
       GROUP BY u.id, u.username, u.email, u.created_at, u.is_approved
       ORDER BY u.created_at DESC;
     `;
@@ -2520,9 +2518,7 @@ const formatDateTime=(date)=> {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtpout.secureserver.net',
-      port: 465,
-      secure: true, // true for port 465, false for 587
+      service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2811,7 +2807,7 @@ app.post('/api/admin/send-campaign-earnings-emails', async (req, res) => {
               <table border="0" cellpadding="0" cellspacing="0" width="100%" class="header-table">
                 <tr>
                   <td class="logo-section" valign="top" style="width: 50%; padding-right: 10px;">
-                    <img src="https://lh3.googleusercontent.com/d/1o3Uh5lvuy5RSGezOfKLvEOjGydXm-HvX" alt="DLS Group Logo" style="display: block; width: 100px; max-width: 100px; height: auto;">
+                    <img src="https://lh3.googleusercontent.com/d/1pdrEVX-VdyNHBW44agR508G1mcYWfXh9" alt="DLS Group Logo" style="display: block; width: 100px; max-width: 100px; height: auto;">
                   </td>
                   <td class="invoice-details" valign="top" style="width: 50%; text-align: right;">
                     <p class="invoice-title">INVOICE</p>
@@ -2871,7 +2867,7 @@ app.post('/api/admin/send-campaign-earnings-emails', async (req, res) => {
                   <td class="summary-label" style="text-align: right; font-weight: bold; padding-right: 15px;">SUB-TOTAL:</td>
                   <td class="summary-value" style="text-align: right; font-weight: bold;">$${earnedAmount.toFixed(2)}</td>
                 </tr>
-                <tr>
+                <tr style="padding-bottom: 20px;">
                   <td class="summary-label" style="text-align: right; font-weight: bold; padding-right: 15px;">TOTAL DEDUCTIONS (-12%):</td>
                   <td class="summary-value" style="text-align: right; font-weight: bold;">-$${twelvePercent.toFixed(2)}</td>
                 </tr>
@@ -2882,13 +2878,13 @@ app.post('/api/admin/send-campaign-earnings-emails', async (req, res) => {
               </table>
 
 
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="footer-table">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="footer-table" style="margin-top: 20px;">
                 <tr>
                   <td valign="bottom" style="width: 50%; padding-right: 10px;">
                     <p class="thank-you" style="font-weight: 500; font-size: 16px;">Thank You For Your Business</p>
                   </td>
                   <td class="signature-section" valign="bottom" style="width: 50%; text-align: right;">
-                    <img src="https://lh3.googleusercontent.com/d/1SOWCeboQ4uCdDeBk5zWwurZPfOq-Q5dr=w600-h600" alt="Authorized Signature" style="max-width: 120px; height: auto; display: block; margin-left: auto; margin-right: 0; margin-bottom: 5px;">
+                    <img src="https://lh3.googleusercontent.com/d/1mqzgHmpNb3cF6ESKZNG-DGXOAUQFOJ_p" alt="Authorized Signature" style="max-width: 120px; height: auto; display: block; margin-left: auto; margin-right: 0; margin-bottom: 5px;">
                     <hr style="border: none; border-top: 1px solid #333; margin: 0 0 5px 0;">
                     <p class="company-name-footer" style="font-weight: bold; font-size: 14px;">DLS GROUP</p>
                   </td>
