@@ -2092,8 +2092,8 @@ app.post('/api/send-support-mail', async (req, res) => {
     // GoDaddy SMTP config
     const transporter = nodemailer.createTransport({
       host: 'smtp.secureserver.net',
-      port: 465,
-      secure: true,
+      port: 587, // Changed from 465 to 587
+      secure: false, // 587 uses STARTTLS, not SSL
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -2522,8 +2522,8 @@ const sendEmail = async (to, subject, text, html) => {
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.secureserver.net',
-      port: 465,
-      secure: true,
+      port: 587, // Changed from 465 to 587
+      secure: false, // 587 uses STARTTLS, not SSL
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
